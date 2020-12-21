@@ -154,31 +154,6 @@ az network vnet subnet update -g $RG --vnet-name $VNET_NAME --name $AKSSUBNET_NA
 #az network vnet subnet update -g $RG --route-table $FWROUTE_TABLE_NAME --ids $SUBNETID
 ```
 
-<del>
-
-## AKS Creation Service Principal Pre-requisites
-
-This section walks through creating a Service Principal which will be used by AKS to create the cluster resources. It is this Service Principal that actually creates the underlying Azure resources such as VMs, Storage, Load Balancers, etc. used by AKS. If you grant to few permissions it will not be able to create the AKS Cluster. If you grant too much then the Security Principle of Least Privilege is not being followed. If you have an existing Service Principal feel free to leverage that.
-
-The key permission that is being granted to the Service Principal below is to the Virtual Network so it can create resources inside of the network.
-
-```bash
-# Create SP and Assign Permission to Virtual Network
-az ad sp create-for-rbac -n "${PREFIX}sp" --skip-assignment
-# ********************************************************************************
-# Take the SP Creation output from above command and fill in Variables accordingly
-# ********************************************************************************
-APPID="<SERVICE_PRINCIPAL_APPID_GOES_HERE>"
-PASSWORD="<SERVICEPRINCIPAL_PASSWORD_GOES_HERE>"
-VNETID=$(az network vnet show -g $RG --name $VNET_NAME --query id -o tsv)
-# Assign SP Permission to VNET
-az role assignment create --assignee $APPID --scope $VNETID --role Contributor
-# View Role Assignment
-az role assignment list --assignee $APPID --all -o table
-```
-
-</del>
-
 ## Create Public IP Address for Azure Application Gateway
 
 This section walks through creating a Public IP address for use with a Web Application Firewall (WAF). For the purposes of this workshop, we will be using Azure Application Gateway as the WAF and it will be created as part of the AKS provisioning process.

@@ -22,22 +22,17 @@ The end goal is to take you from having a kubernetes setup that is unsecure by d
 
 ## Lab Guides - Day 1
 
-  1. [Customer Scenario](customer-scenario/README.md)
-  2. [Security, Governance & Azure Security Setup](governance-security/README.md)
-  3. [Cluster Design](cluster-design/README.md)
-  4. [Cluster Pre-Provisioning](cluster-pre-provisioning/README.md)
-  5. [Cluster Provisioning](cluster-provisioning/README.md)
-  6. [Post-Provisioning](post-provisioning/README.md)
-  7. [Cost Governance](cost-governance/README.md)
-  8. [Deploy App](deploy-app/README.md)
+  1. [Cluster Design](cluster-design/README.md)
+  2. [Cluster Pre-Provisioning](cluster-pre-provisioning/README.md)
+  3. [Cluster Provisioning](cluster-provisioning/README.md)
+  4. [Post-Provisioning](post-provisioning/README.md)
+  5. [Cost Governance](cost-governance/README.md)
 
 ## Lab Guides - Day 2
 
   1. [Deploy App](deploy-app/README.md)
   2. [Day 2 Operations](day2-operations/README.md)
-  3. [Service Mesh - Do I need it?](service-mesh/README.md)
-  4. [Validate Scenarios](validate-scenarios/README.md)
-  5. [Thought Leadership](thought-leadership/README.md)
+  3. [Validate Scenarios](validate-scenarios/README.md)
 
 ## Prerequisites
 
@@ -50,13 +45,9 @@ The following are the requirements to **start**.
 
 - Azure CLI | [Install CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest)
 
-  - Minimum Version: 2.0.80
-  - AKS Preview Extension: 0.4.27
-  - Firewall Extension Version: 0.1.8
-
 - Kubectl CLI | [Install kubectl with Azure CLI](https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough#connect-to-the-cluster)
 
-  - Minimum Version: 1.15.0
+  - Minimum Version: 1.18.0
 
 - Git | [Git SCM](https://git-scm.com/downloads)
 
@@ -68,7 +59,7 @@ The following are the requirements to **start**.
 
 - Terraform | [Terraform Download](https://www.terraform.io/downloads.html)
 
-  - Minimum Version: v0.12.20
+  - Minimum Version: v0.13.4+
 
 - Docker Community Edition (CE) | [Install CE](https://docs.docker.com/v17.09/engine/installation/)
 

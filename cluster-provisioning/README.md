@@ -50,22 +50,6 @@ export TF_VAR_github_organization=Azure # PLEASE NOTE: This should be your githu
 export TF_VAR_github_token=<use previously created PAT token>
 ```
 
-<del>
-
-```
-export TF_VAR_client_id=$APPID
-export TF_VAR_client_secret=$PASSWORD
-export TF_VAR_aad_server_app_id=<ask_instructor>
-export TF_VAR_aad_server_app_secret=<ask_instructor>
-export TF_VAR_aad_client_app_id=<ask_instructor>
-export TF_VAR_aad_tenant_id=<ask_instructor>
-```
-
-GUID for server & client app ids creation:
-https://docs.microsoft.com/en-us/azure/aks/azure-ad-integration-cli
-
-</del>
-
 Now that we have all of our variables stored we can initialize Terraform.
 
 ```bash
@@ -142,22 +126,14 @@ tooling.
 You'll notice once your cluster is provisioned you'll also have the following deployed:
 
 - **Namespaces** - Allows logical isolation of resources and provides the ability to set RBAC, Quota, Network Policies between namespaces.
+  
 - **RBAC Policies** - The RBAC policies are set to give pre-defined active directory groups restricted permissions to the deployed cluster. This allows different permissions to specific namespaces.
 
 - **Network Policy Rules** - The network policies will restrict communication between different teams' namespace, to limit the exposure of access between namespaces.
 
-- **Gatekeeper Policies** - Allows a custom admission control to define policies to meet the company's compliance and governance needs. For example, if you want to only allow users to deploy internal load balancers, then Gatekeeper can enforce it based on the policy that has been set.
-
-- **Falco Rules** - Provides runtime security to enforce policy across all your Kubernetes clusters. For example, one of the policies will inform you based on users performing an "exec" command against a container.
-
-- **Linkerd Service Mesh** - A service mesh provides a lot of features that are out of scope of this workshop, but we will focus on the security features present in a service mesh. Linkerd will provide mTLS HTTP-based communication between meshed pods, by establishing and authenticating secure, private TLS connections between Linkerd proxies.
 - **Quotas** - Quotas will allow you to set resource consumption governance on a namespace to limit the amount of resources a team or user can deploy to a cluster. It gives you a way to logically carve out resources of a single cluster.
 
 - **Ingress** - Ingress will provide L7 networking features for North-to-South traffic coming into the cluster. This provides SSL offloading for services exposed to end-users.
-
-- **Kured** - Kured will assist with rebooting the nodes when needed as part of the shared responsibility between customer and Microsoft for the worker nodes. It will cordon and drain the worker nodes one by one, in an orderly fashion.
-
-- **AAD Pod Identity** - This namespace contains the controllers and daemonSets needed to use Managed Pod Identity to access other Azure resources like Azure Key Vault (AKV) without having to manage/deploy secrets and keys.
 
 This is all done through Flux by automatically making sure that your new container images and configs are propagated to the cluster. How did we do this through the Terraform deployment? You'll find two different Terraform files, one (`github.tf`) that created an access key for our git repo and the other (`flux.tf`), which uses the Kubernetes provider to deploy flux to the cluster. Flux then has access to the repo and points to the cluster-config directory, which hosts all of our Kubernetes manifests. Flux automatically propagates and applies all the configs to the AKS cluster.
 
