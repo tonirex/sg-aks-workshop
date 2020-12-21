@@ -26,11 +26,11 @@ The end goal is to take you from having a kubernetes setup that is unsecure by d
   2. [Cluster Pre-Provisioning](cluster-pre-provisioning/README.md)
   3. [Cluster Provisioning](cluster-provisioning/README.md)
   4. [Post-Provisioning](post-provisioning/README.md)
-  5. [Cost Governance](cost-governance/README.md)
+  5. [Deploy App](deploy-app/README.md)
 
 ## Lab Guides - Day 2
 
-  1. [Deploy App](deploy-app/README.md)
+  1. [Cost Governance](cost-governance/README.md)
   2. [Day 2 Operations](day2-operations/README.md)
   3. [Validate Scenarios](validate-scenarios/README.md)
 
@@ -47,7 +47,7 @@ The following are the requirements to **start**.
 
 - Kubectl CLI | [Install kubectl with Azure CLI](https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough#connect-to-the-cluster)
 
-  - Minimum Version: 1.18.0
+  - Minimum Version: 1.19.0
 
 - Git | [Git SCM](https://git-scm.com/downloads)
 

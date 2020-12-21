@@ -4,8 +4,6 @@ metadata:
   name: dev
   labels:
     app: dev
-  annotations:
-    linkerd.io/inject: enabled
 ---
 apiVersion: v1
 kind: Namespace
@@ -13,8 +11,6 @@ metadata:
   name: staging
   labels:
     app: staging
-  annotations:
-    linkerd.io/inject: enabled
 ---
 apiVersion: v1
 kind: Namespace
@@ -22,8 +18,6 @@ metadata:
   name: production
   labels:
     app: production
-  annotations:
-    linkerd.io/inject: enabled
 ---
 apiVersion: v1
 kind: Namespace
@@ -38,8 +32,6 @@ metadata:
   name: ingress
   labels:
     app: ingress
-  annotations:
-    linkerd.io/inject: enabled
 ---
 apiVersion: v1
 kind: Namespace

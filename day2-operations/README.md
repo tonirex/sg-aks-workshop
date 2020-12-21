@@ -324,7 +324,7 @@ linkerd-sp-validator-747dcd685c-swsp9    2/2     Running   2          2m4s   100
 
 ## Next Steps
 
-[Service Mesh](/service-mesh/README.md)
+[Validate Scenarios](validate-scenarios/README.md)
 
 ## Key Links
 

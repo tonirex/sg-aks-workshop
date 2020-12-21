@@ -130,7 +130,7 @@ resource "kubernetes_deployment" "flux" {
 
         container {
           name  = "flux"
-          image = "docker.io/fluxcd/flux:1.18.0"
+          image = "docker.io/fluxcd/flux:1.21.0"
 
           volume_mount {
             name       = "git-key"
@@ -151,6 +151,7 @@ resource "kubernetes_deployment" "flux" {
             "--git-poll-interval=15s",
             "--git-path=cluster-config",
             "--sync-timeout=10m",
+            "--git-timeout=2m"
           ]
         }
       }

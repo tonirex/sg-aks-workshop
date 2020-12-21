@@ -10,11 +10,6 @@ resource "azurerm_storage_account" "storage" {
   }
 }
 
-#resource "azurerm_resource_group" "demo" {
-#  name     = var.resource_group
-#  location = var.location
-#}
-
 resource "azurerm_container_registry" "acr" {
   name                = "${var.prefix}acr"
   resource_group_name = var.resource_group
@@ -71,19 +66,11 @@ resource "azurerm_kubernetes_cluster" "demo" {
   identity {
     type = "SystemAssigned"
   }
-  # service_principal {
-  #   client_id     = var.client_id
-  #   client_secret = var.client_secret
-  # }
 
   role_based_access_control {
     enabled = true
     azure_active_directory {
       managed = true
-      # client_app_id     = var.aad_client_app_id
-      #server_app_id     = var.aad_server_app_id
-      #server_app_secret = var.aad_server_app_secret
-      #tenant_id         = var.aad_tenant_id
     }
   }
   addon_profile {
@@ -102,7 +89,6 @@ resource "azurerm_kubernetes_cluster" "demo" {
     service_cidr       = var.service_cidr
     dns_service_ip     = var.dns_service_ip
     docker_bridge_cidr = var.docker_bridge_cidr
-    #pod_cidr = var.pod_cidr
   }
 
   lifecycle {
