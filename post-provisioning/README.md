@@ -68,26 +68,6 @@ This section sets up the connection between AKS and Azure Container Registry (AC
 az aks update -n $NAME-aks -g $RG --attach-acr $ACR_NAME
 ```
 
-## Setup Cluster Metrics
-
-This section enables capture of metrics for the AKS cluster to be able to create items like notifications/alerts when key criteria is exceeded.
-
-Go to Azure Portal to enable Metrics. 
-![Enable Azure Monitor for Container Metrics](img/AzMforContainer.png)
-
-<del>
-```bash
-# Add Metrics
-APPID=$(az aks show -g $RG -n $PREFIX-aks --query 'identity.principalId' -o tsv)
-az aks show -g $RG -n $PREFIX-aks --query 'id' -o tsv
-az role assignment create --assignee $APPID --scope $(az aks show -g $RG -n $PREFIX-aks --query 'id' -o tsv) --role "Monitoring Metrics Publisher"
-# Add Log Analytics Reader
-az role assignment create --assignee $APPID --scope $(az aks show -g $RG -n $PREFIX-aks --query 'id' -o tsv) --role "Log Analytics Reader"
-# Check Permissions associated with the Service Principal
-az role assignment list --assignee $APPID --all -o table
-```
-</del>
-
 ## Find Public IP of AKS api-server Endpoint
 
 This section shows how to find the Public IP (PIP) of the AKS cluster to be able to add it to firewalls for IP whitelisting purposes.
@@ -180,10 +160,11 @@ For more details on usage scenarios click [here](https://docs.microsoft.com/en-u
 
 ## Next Steps
 
-[Deploy App](deploy-app/README.md)
+[Deploy App](/deploy-app/README.md)
 
 ## Key Links
 
+- [Enable Kubernetes Logs](https://docs.microsoft.com/en-us/azure/aks/view-master-logs)
 - [Patch Management with Kured](https://docs.microsoft.com/en-us/azure/aks/node-updates-kured)
 - [Azure Traffic Analytics](https://docs.microsoft.com/en-us/azure/network-watcher/traffic-analytics)
-- [Enable Kubernetes Logs](https://docs.microsoft.com/en-us/azure/aks/view-master-logs)
+

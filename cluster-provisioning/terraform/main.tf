@@ -109,9 +109,16 @@ data "azurerm_virtual_network" "vnet" {
   resource_group_name = var.resource_group
 }
 
-resource "azurerm_role_assignment" "demo" {
+resource "azurerm_role_assignment" "role1" {
   depends_on = [azurerm_kubernetes_cluster.demo]
   scope                = data.azurerm_virtual_network.vnet.id
   role_definition_name = "Contributor"
+  principal_id         = azurerm_kubernetes_cluster.demo.identity[0].principal_id
+}
+
+resource "azurerm_role_assignment" "role2" {
+  depends_on = [azurerm_kubernetes_cluster.demo]
+  scope                = azurerm_kubernetes_cluster.demo.id
+  role_definition_name = "Monitoring Metrics Publisher"
   principal_id         = azurerm_kubernetes_cluster.demo.identity[0].principal_id
 }
