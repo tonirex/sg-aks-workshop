@@ -14,7 +14,7 @@ spec:
     metadata:
       labels:
         app: imageclassifierweb
-        aadpodidbinding: bind-akv-identity
+        aadpodidbinding: akv-identity
     spec:
       securityContext:
         runAsGroup: 99
@@ -121,7 +121,7 @@ spec:
     metadata:
       labels:
         app: imageclassifierworker
-        aadpodidbinding: bind-akv-identity
+        aadpodidbinding: akv-identity
     spec:
       securityContext:
         runAsGroup: 99

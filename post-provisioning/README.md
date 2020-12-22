@@ -4,9 +4,9 @@ This section walks us through steps that need to get performed after the cluster
 
 ## Test Post Configuration
 
-This is a quick test to make sure that Pods can be created and the Ingress Controller default backend is setup correctly.
+This is a quick test to make sure that Pods can be created, and the Ingress Controller default backend is set up correctly.
 
-- First we need to grab AKS cluster credentials so we can access the api-server endpoint and run some commands.
+- First we need to grab AKS cluster credentials, so we can access the api-server endpoint and run some commands.
 - Second we will do a quick check via get nodes.
 - Lastly, we will spin up a Pod, exec into it, and test our F/W rules.
 
@@ -51,7 +51,7 @@ There is an overwhelming need for organizations to capture all data that they ca
 
 So what do we do? We highly encourage organizations to only capture the data that they need to help reduce costs as well as optimize around analytics that need to be done. The less data that needs to be processed, the less compute that is needed, which means less cost. So, do you really need the audit logs?
 
-Ok, you get it, or you don't buy into selectively capturing data. Your organization needs to capture all of the data because you don't know what you don't know.
+Ok, you get it, or you don't buy into selectively capturing data. Your organization needs to capture all the data because you don't know what you don't know.
 
 ### Capturing & Storing AKS Audit Logs
 
@@ -79,7 +79,7 @@ kubectl get endpoints --namespace default kubernetes
 
 ## Find Public IP of Azure Application Gateway used for WAF
 
-This setion shows how to find the Public IP Address of the Azure Application Gateway which is used as a WAF and the Ingress point for workloads into the Cluster.
+This setion shows how to find the Public IP Address of the Azure Application Gateway which is used as a WAF, and the Ingress point for workloads into the Cluster.
 
 ```bash
 # Retrieve the Public IP Address of the App Gateway.
@@ -88,75 +88,37 @@ az network public-ip show -g $RG -n $AGPUBLICIP_NAME --query "ipAddress" -o tsv
 
 ## OPA and Gatekeeper Policy Setup
 
-In this section we will setup the AKS specific policies we want to enforce. To recap, for our given scenario that means:
+In this section we will set up the AKS specific policies we want to enforce. To recap, for our given scenario that means:
 
 - Registry Whitelisting
 
-Use Azure Policy to whitelist Registry. 
+Azure Policy used OPAv3 to enforce the Pod Security Policy, and it also provides out of the box policies that can secure the AKS cluster. We will use "Ensure only allowed container images in Kubernetes Cluster" to whitelist the registry that contains "kevingbb"
 
-<del>
+![Assign Policy](img/opa_1.png)
+![Policy Parameters](img/opa_2.png)
 
 ```bash
-# Create Allowed Repos Constraint Template
-kubectl apply -f https://raw.githubusercontent.com/open-policy-agent/gatekeeper-library/master/library/general/allowedrepos/template.yaml
-
-# Install Constraint Based on Constraint Template
-cat <<EOF | kubectl apply -f -
-apiVersion: constraints.gatekeeper.sh/v1beta1
-kind: K8sAllowedRepos
-metadata:
-  name: prod-repo-is-kevingbb
-spec:
-  match:
-    kinds:
-      - apiGroups: [""]
-        kinds: ["Pod"]
-    namespaces:
-      - "production"
-  parameters:
-    repos:
-      - "kevingbb"
-EOF
-
 # Look at Created Resources
 # Check Resources
 kubectl get crd | grep gatekeeper
 kubectl get constrainttemplate,k8sallowedrepos,config -n gatekeeper-system
 
 # Test out Allowed Registry Policy Against production Namespace
-kubectl run --generator=run-pod/v1 -it --rm centosprod --image=centos -n production
+kubectl run centosprod --image=centos -it --rm -n production
 
 # Try again with Image from kevingbb
-kubectl run --generator=run-pod/v1 bobblehead --image=kevingbb/khbobble -n production
+kubectl run bobblehead --image=kevingbb/khbobble -n production
 
 # What did you notice with the last command? The main image got pulled, but the sidecar images did not :).
 
 # Try again in default Namespace
-kubectl run --generator=run-pod/v1 -it --rm centosdefault --image=centos -n default
+kubectl run centosdefault --image=centos -it --rm -n default
+
 # Test out Connectivity
 curl 100.64.2.4
 # Exit out of Pod
 exit
 ```
-</del>
-
-## Setup Flow Logs and Traffic Analytics
-
-This section walks us through setting up flow logs on the Network Security Groups (NSGs) as well as Traffic Analytics to gain additional insights.
-
-To enable the NSG flow logs and Traffic Analytics, please follow this online Tutorial:
-
-[Flow Logs and Traffic Analytics Prerequisites](https://docs.microsoft.com/en-us/azure/network-watcher/traffic-analytics#prerequisites)
-
-**Here is a list of some of the key items that can be monitored for with Traffic Analytics:**
-
-- View Ports and VMs Receiving Traffic from the Internet
-- Find Traffic Hot Spots
-- Visualize Traffic Distribution by Geography
-- Visualize Traffic Distribution by Virtual Networks
-- Visualize Trends in NSG Rule Hits
-
-For more details on usage scenarios click [here](https://docs.microsoft.com/en-us/azure/network-watcher/traffic-analytics#usage-scenarios).
 
 ## Next Steps
 

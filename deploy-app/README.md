@@ -338,8 +338,11 @@ az keyvault secret show --name "AppInsightsInstrumentationKey" --vault-name ${PR
 - Now that we have AKV and the secrets setup, we need to create the Azure AD Identity and permissions to AKV.
 
 ```bash
+# Enable AAD Pod Identity
+az aks update -g $RG -n $PREFIX-aks --enable-pod-identity
+
 # Create Azure AD Identity
-AAD_IDENTITY="contosofinidentity"
+AAD_IDENTITY=${PREFIX}identity
 az identity create -g $RG -n $AAD_IDENTITY -o json
 # Sample Output
 {
@@ -347,55 +350,16 @@ az identity create -g $RG -n $AAD_IDENTITY -o json
   "clientSecretUrl": "https://control-eastus.identity.azure.net/subscriptions/SUBSCRIPTION_ID/resourcegroups/contosofin-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/contosofinidentity/credentials?tid=TID&aid=AID",
   "id": "/subscriptions/SUBSCRIPTION_ID/resourcegroups/contosofin-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/contosofinidentity",
   "location": "eastus",
-  "name": "contosofinidentity",
+  "name": "jayaiaidentity",
   "principalId": "PRINCIPALID",
-  "resourceGroup": "contosofin-rg",
+  "resourceGroup": "jayaia-rg",
   "tags": {},
   "tenantId": "TENANT_ID",
   "type": "Microsoft.ManagedIdentity/userAssignedIdentities"
 }
 # Grab PrincipalID & ClientID & TenantID from Above
-AAD_IDENTITY_PRINCIPALID=$(az identity show -g $RG -n $AAD_IDENTITY --query "principalId" -o tsv)
-AAD_IDENTITY_CLIENTID=$(az identity show -g $RG -n $AAD_IDENTITY --query "clientId" -o tsv)
-AAD_TENANTID=$(az identity show -g $RG -n $AAD_IDENTITY --query "tenantId" -o tsv)
-echo $AAD_IDENTITY_PRINCIPALID
-echo $AAD_IDENTITY_CLIENTID
-echo $AAD_TENANTID
-# Assign AKV Permissions to Azure AD Identity
-az role assignment create \
-    --role Reader \
-    --assignee $AAD_IDENTITY_PRINCIPALID \
-    --scope /subscriptions/$SUBID/resourcegroups/$RG
-# Grant AAD Identity access permissions to AKS Cluster Kubelet MSI
-KUBELET_ID=$(az aks show -g $RG -n $PREFIX-aks --query identityProfile.kubeletidentity.clientId -o tsv)
-MCRG_ID=$(az group show --name $(az aks show -g $RG -n $PREFIX-aks --query nodeResourceGroup -o tsv) --query id -o tsv)
-AKSSUBNET_ID=$(az network vnet subnet show \
-    --resource-group $RG \
-    --vnet-name $VNET_NAME \
-    --name $AKSSUBNET_NAME --query id -o tsv)
-
-az role assignment create \
-    --role "Managed Identity Operator" \
-    --assignee $KUBELET_ID \
-    --scope /subscriptions/$SUBID/resourcegroups/$RG/providers/Microsoft.ManagedIdentity/UserAssignedIdentities/$AAD_IDENTITY
-
-    az role assignment create \
-    --role "Managed Identity Operator" \
-    --assignee $KUBELET_ID \
-    --scope $MCRG_ID
-
-    az role assignment create \
-    --role "Virtual Machine Contributor" \
-    --assignee $KUBELET_ID \
-    --scope $MCRG_ID
-
-    az role assignment create \
-    --role "Network Contributor" \
-    --assignee $KUBELET_ID \
-    --scope $AKSSUBNET_ID
-
-
-az role assignment list --assignee $KUBELET_ID --all -o table
+IDENTITY_PRINCIPALID=$(az identity show -g $RG -n $AAD_IDENTITY --query "principalId" -o tsv)
+IDENTITY_CLIENTID=$(az identity show -g $RG -n $AAD_IDENTITY --query "clientId" -o tsv)
 ```
 
 - Now that we have the Azure AD Identity setup, the next step is to set up the access policy (RBAC) in AKV to allow or deny certain permissions to the data.
@@ -413,42 +377,12 @@ az keyvault set-policy \
 - Now that we have all the Azure AD Identity and AKS Cluster SP permissions setup. The next step is to setup and configure the AAD Pod Identities in AKS.
 
 ```bash
-# Create AAD Identity
-cat <<EOF | kubectl apply -f -
-apiVersion: "aadpodidentity.k8s.io/v1"
-kind: AzureIdentity
-metadata:
-  name: akv-identity
-  namespace: dev
-  annotations:
-    aadpodidentity.k8s.io/Behavior: namespaced
-spec:
-  type: 0
-  ResourceID: /subscriptions/$SUBID/resourcegroups/$RG/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$AAD_IDENTITY
-  ClientID: $AAD_IDENTITY_CLIENTID
-EOF
-# Create AAD Identity Binding
-cat <<EOF | kubectl apply -f -
-apiVersion: "aadpodidentity.k8s.io/v1"
-kind: AzureIdentityBinding
-metadata:
-  name: akv-identity-binding
-  namespace: dev
-spec:
-  AzureIdentity: akv-identity
-  Selector: bind-akv-identity
-EOF
 
-cat <<EOF | kubectl apply -f -
-apiVersion: "aadpodidentity.k8s.io/v1"
-kind: AzurePodIdentityException
-metadata:
-  name: mic-exception
-  namespace: aadpodidentity
-spec:
-  PodLabels:
-    app: mic
-EOF
+export IDENTITY_CLIENT_ID="$(az identity show -g ${RG} -n ${IDENTITY_NAME} --query clientId -otsv)"
+export IDENTITY_RESOURCE_ID="$(az identity show -g ${RG} -n ${IDENTITY_NAME} --query id -otsv)"
+
+az aks pod-identity add --resource-group ${RG} --cluster-name ${PREFIX}-aks --namespace dev --name akv-identity --identity-resource-id ${IDENTITY_RESOURCE_ID}
+
 # Take a look at AAD Resources
 kubectl get azureidentity,azureidentitybinding -n dev
 ```
@@ -461,22 +395,12 @@ kubectl get azureidentity,azureidentitybinding -n dev
 
 metadata:
 labels:
-**aadpodidbinding: bind-akv-identity**
+**aadpodidbinding: akv-identity**
 name: my-pod
 
 ```bash
 # Remove Existing Application
 kubectl delete -f app.yaml
-
-# Pull Images from Docker Hub to Local Workstation
-docker pull kevingbb/imageclassifierweb:v3
-docker pull kevingbb/imageclassifierworker:v3
-
-# Push Images to ACR
-docker tag kevingbb/imageclassifierweb:v3 ${PREFIX}acr.azurecr.io/imageclassifierweb:v3
-docker tag kevingbb/imageclassifierworker:v3 ${PREFIX}acr.azurecr.io/imageclassifierworker:v3
-docker push ${PREFIX}acr.azurecr.io/imageclassifierweb:v3
-docker push ${PREFIX}acr.azurecr.io/imageclassifierworker:v3
 
 # Create Secret for Name of Azure Key Vault for App Bootstrapping
 kubectl create secret generic image-akv-secret \
@@ -485,9 +409,6 @@ kubectl create secret generic image-akv-secret \
 
 # Deploy v3 of the Application
 kubectl apply -f appv3msi.yaml
-
-# Check to see that AAD Pod Identity was Assigned (You should see 2)
-kubectl get AzureAssignedIdentities -n dev
 
 # Display the Application Resources
 kubectl get deploy,rs,po,svc,ingress,secrets -n dev
@@ -502,7 +423,7 @@ az network public-ip show -g $RG -n $AGPUBLICIP_NAME --query "ipAddress" -o tsv
 
 ## Next Steps
 
-[Cost Governance](cost-governance/README.md)
+[Cost Governance](/cost-governance/README.md)
 
 ## Key Links
 

@@ -7,24 +7,20 @@ Now that we have implemented everything, let's go back and revisit our requireme
 This is a quick recap of the requirements:
 
 1. Leverage Existing Identity Mgmt Solution
-2. Implement Security Least Privilege Principle
+2. Implement Security The Least Privilege Principle
 3. Log Everything for Audit Reporting purposes
 4. Ensure Security Controls are being met (No Drifting)
 5. Monitoring and Alerting Events
-
     - Alert when SSH into Container
     - Alert AKS Cluster has IP whitelisting set
-
-6. Integrate with Existing SIEM
-7. Deploy into Existing VNET with Ingress and Egress Restrictions
-8. Resources can only be created in specific regions due to data sovereignty
-9. Container Registry Whitelisting
-10. Ability to Chargeback to Line of Business
-11. Secrets Mgmt
-12. Container Image Mgmt
-13. Restrict Creation of Public IPs
-14. Implement & Deploy Image Processing Application
-15. Easily rollout new versions of Application
+6. Deploy into Existing VNET with Ingress and Egress Restrictions
+7. Container Registry Whitelisting
+8. Ability to Chargeback to Line of Business
+9. Secrets Mgmt
+10. Container Image Mgmt
+11. Restrict Creation of Public IPs
+12. Implement & Deploy Image Processing Application
+13. Easily rollout new versions of Application
 
 ## Requirements to Technology Matrix
 
@@ -36,16 +32,14 @@ This is a quick recap of the requirements:
 | 4. Ensure Security Controls are being met (No Drifting)                      | Flux, Git Repo                                       |
 | 5a. Alert when SSH into Container                                            | Falco + Azure Monitor for Containers                 |
 | 5b. Alert AKS Cluster has IP whitelisting set                                | Azure Security Center + Azure Monitor for Containers |
-| 6. Integrate with Existing SIEM                                              | Azure Security Center or Azure Sentinel              |
-| 7. Deploy into Existing VNET with Ingress and Egress Restrictions            | Azure VNET, Azure Firewall                           |
-| 8. Resources can only be created in specific regions due to data sovereignty | Azure Policy                                         |
-| 9. Container Registry Whitelisting                                           | Open Policy Agent + OSS Version of Gatekeeper        |
-| 10. Ability to Chargeback to Line of Business                                | KubeCost                                             |
-| 11. Secrets Mgmt                                                             | Azure AD Pod Identity + Azure Key Vault              |
-| 12. Container Image Mgmt                                                     | Anchore                                              |
-| 13. Restrict Creation of Public IPs                                          | Azure Policy                                         |
-| 14. Implement & Deploy Image Processing Application                          | Azure Monitor for Containers, Application Insights   |
-| 15. Easily rollout new versions of Application                               | Kubernetes Built-in                                  |
+| 6. Deploy into Existing VNET with Ingress and Egress Restrictions            | Azure VNET, Azure Firewall                           |
+| 7. Container Registry Whitelisting                                           | Open Policy Agent + OSS Version of Gatekeeper        |
+| 8. Ability to Chargeback to Line of Business                                | KubeCost                                             |
+| 9. Secrets Mgmt                                                             | Azure AD Pod Identity + Azure Key Vault              |
+| 10. Container Image Mgmt                                                     | Anchore                                              |
+| 11. Restrict Creation of Public IPs                                          | Azure Policy                                         |
+| 12. Implement & Deploy Image Processing Application                          | Azure Monitor for Containers, Application Insights   |
+| 13. Easily rollout new versions of Application                               | Kubernetes Built-in                                  |
 
 The rest of these sections shows how we can validate the requirements above.
 
@@ -73,7 +67,7 @@ Authenticate to AKS using the cluster reader credentials and then try and execut
 
 ```bash
 # Try to create a pod in the default namespace
-kubectl run --generator=run-pod/v1 -it --rm centos2 --image=centos
+kubectl run centos2 -it --rm centos2 --image=centos
 ```
 
 ![Cluster Reader)](/validate-scenarios/img/cluster_reader.png)
@@ -187,15 +181,7 @@ AzureActivity
 
 ![Azure Monitor Logs Authorized IP Query)](/validate-scenarios/img/monitor_logs_authorizedip.png)
 
-## 6. Validate - Integrate with Existing SIEM
-
-- View Azure Security Center Security Solutions
-
-**Go to the Azure Portal, click on Security Center, then on the Security Solutions blade.**
-
-![Azure Security Center SIEM Integration)](/validate-scenarios/img/asc_security_solutions.png)
-
-## 7. Validate - Deploy into Existing VNET with Ingress and Egress Restrictions
+## 6. Validate - Deploy into Existing VNET with Ingress and Egress Restrictions
 
 - Validate Traffic In & Out of Cluster (North/South)
 
@@ -216,17 +202,7 @@ exit
 
 ![East/West)](/validate-scenarios/img/east_west.png)
 
-## 8. Validate - Resources can only be created in specific regions due to data sovereignty
-
-- Try to create resource outside of allowed region locations
-
-```bash
-az storage account create --sku Standard_LRS --kind StorageV2 --location westus -g notinallowedregions-rg -n niarsa
-```
-
-![Create Storage in West US (Not in East US)](/validate-scenarios/img/azure_policy_not_allowed.png)
-
-## 9. Validate - Container Registry Whitelisting
+## 7. Validate - Container Registry Whitelisting
 
 - Try to pull from a non-whitelisted Container Registry
 
@@ -237,7 +213,7 @@ kubectl run --generator=run-pod/v1 -it --rm centosprod --image=centos -n product
 
 ![Gatekeeper Allowed Registries](/validate-scenarios/img/gatekeeper_allowed_registries.png)
 
-## 10. Validate - Ability to Chargeback to Line of Business
+## 8. Validate - Ability to Chargeback to Line of Business
 
 - View Chargeback Dashboard
 
@@ -250,7 +226,7 @@ open "http://localhost:9090"
 
 ![Sample Kubecost Dashboard](/validate-scenarios/img/kubecost.png)
 
-## 11. Validate - Secrets Mgmt
+## 9. Validate - Secrets Mgmt
 
 - Check that there is no sensitive data stored in the container image or in a configuration file in plain text.
 
@@ -303,7 +279,7 @@ az keyvault secret show --name "AppInsightsInstrumentationKey" --vault-name "${P
 
 - So how does the secret get into the application then? Great question, it relies on Azure AD Pod Identity, or what we like to call Managed Pod Identity. Click [here](https://github.com/Azure/aad-pod-identity) for more details.
 
-## 12. Validate - Container Image Mgmt
+## 10. Validate - Container Image Mgmt
 
 - Check that container images in ACR are passing image scanning policy check.
 
@@ -337,17 +313,17 @@ exit
 
 ![Anchore Pass or Fail](/validate-scenarios/img/anchore_scan.png)
 
-## 13. Validate - Restrict Creation of Public IPs
+## 11. Validate - Restrict Creation of Public IPs
 
 This is similar to #8 in that Azure Policy can be used to restrict the creation of Public IPs exception in certain Resource Groups. This was not implemented in the workshop so that Public IPs were possible to be able to test and see endpoints.
 
-## 14. Validate - Implement & Deploy Image Processing Application
+## 12. Validate - Implement & Deploy Image Processing Application
 
 - Does the Application Run, Visit Public IP
 
 ![Running Application)](/validate-scenarios/img/app_running.png)
 
-## 15. Validate - Easily roll out new versions of Application
+## 13. Validate - Easily roll out new versions of Application
 
 - Ensure the app successfully rolls out a new version of the application and does not cause any downtime.
 
@@ -369,10 +345,6 @@ kubectl rollout history deploy imageclassifierweb -n dev
 ![Deployment Rollout](/validate-scenarios/img/rollout_app.png)
 
 - Test the app to make sure it continues to work.
-
-## Next Steps
-
-[Thought Leadership](/thought-leadership/README.md)
 
 ## Key Links
 
