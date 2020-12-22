@@ -1,4 +1,3 @@
-
 resource "azurerm_application_insights" "demo" {
   name                = "${var.prefix}-ai"
   location            = var.location

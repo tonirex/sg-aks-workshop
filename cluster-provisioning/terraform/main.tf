@@ -26,7 +26,7 @@ resource "azurerm_log_analytics_workspace" "demo" {
 }
 
 resource "azurerm_log_analytics_solution" "demo" {
-  solution_name         = "Containers"
+  solution_name         = "ContainerInsights"
   location              = var.location
   resource_group_name   = var.resource_group
   workspace_resource_id = azurerm_log_analytics_workspace.demo.id
@@ -34,7 +34,7 @@ resource "azurerm_log_analytics_solution" "demo" {
 
   plan {
     publisher = "Microsoft"
-    product   = "OMSGallery/Containers"
+    product   = "OMSGallery/ContainerInsights"
   }
 }
 resource "azurerm_kubernetes_cluster" "demo" {
@@ -69,6 +69,7 @@ resource "azurerm_kubernetes_cluster" "demo" {
 
   role_based_access_control {
     enabled = true
+
     azure_active_directory {
       managed = true
     }
@@ -80,6 +81,9 @@ resource "azurerm_kubernetes_cluster" "demo" {
     oms_agent {
       enabled                    = true
       log_analytics_workspace_id = azurerm_log_analytics_workspace.demo.id
+    }
+    azure_policy {
+      enabled = true
     }
   }
   network_profile {
