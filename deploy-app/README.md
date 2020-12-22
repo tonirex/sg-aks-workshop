@@ -342,7 +342,7 @@ az keyvault secret show --name "AppInsightsInstrumentationKey" --vault-name ${PR
 az aks update -g $RG -n $PREFIX-aks --enable-pod-identity
 
 # Create Azure AD Identity
-AAD_IDENTITY=${PREFIX}identity
+export AAD_IDENTITY=${PREFIX}identity
 az identity create -g $RG -n $AAD_IDENTITY -o json
 # Sample Output
 {
@@ -358,8 +358,7 @@ az identity create -g $RG -n $AAD_IDENTITY -o json
   "type": "Microsoft.ManagedIdentity/userAssignedIdentities"
 }
 # Grab PrincipalID & ClientID & TenantID from Above
-IDENTITY_PRINCIPALID=$(az identity show -g $RG -n $AAD_IDENTITY --query "principalId" -o tsv)
-IDENTITY_CLIENTID=$(az identity show -g $RG -n $AAD_IDENTITY --query "clientId" -o tsv)
+export AAD_IDENTITY_PRINCIPALID=$(az identity show -g $RG -n $AAD_IDENTITY --query "principalId" -o tsv)
 ```
 
 - Now that we have the Azure AD Identity setup, the next step is to set up the access policy (RBAC) in AKV to allow or deny certain permissions to the data.
@@ -378,10 +377,9 @@ az keyvault set-policy \
 
 ```bash
 
-export IDENTITY_CLIENT_ID="$(az identity show -g ${RG} -n ${IDENTITY_NAME} --query clientId -otsv)"
-export IDENTITY_RESOURCE_ID="$(az identity show -g ${RG} -n ${IDENTITY_NAME} --query id -otsv)"
+export AAD_IDENTITY_RESOURCE_ID="$(az identity show -g ${RG} -n ${IDENTITY_NAME} --query id -otsv)"
 
-az aks pod-identity add --resource-group ${RG} --cluster-name ${PREFIX}-aks --namespace dev --name akv-identity --identity-resource-id ${IDENTITY_RESOURCE_ID}
+az aks pod-identity add --resource-group ${RG} --cluster-name ${PREFIX}-aks --namespace dev --name akv-identity --identity-resource-id ${AAD_IDENTITY_RESOURCE_ID}
 
 # Take a look at AAD Resources
 kubectl get azureidentity,azureidentitybinding -n dev
