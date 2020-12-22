@@ -72,6 +72,10 @@ az aks update -n $NAME-aks -g $RG --attach-acr $ACR_NAME
 
 This section enables capture of metrics for the AKS cluster to be able to create items like notifications/alerts when key criteria is exceeded.
 
+Go to Azure Portal to enable Metrics. 
+![Enable Azure Monitor for Container Metrics](img/AzMforContainer.png)
+
+<del>
 ```bash
 # Add Metrics
 APPID=$(az aks show -g $RG -n $PREFIX-aks --query 'identity.principalId' -o tsv)
@@ -82,6 +86,7 @@ az role assignment create --assignee $APPID --scope $(az aks show -g $RG -n $PRE
 # Check Permissions associated with the Service Principal
 az role assignment list --assignee $APPID --all -o table
 ```
+</del>
 
 ## Find Public IP of AKS api-server Endpoint
 
@@ -106,6 +111,10 @@ az network public-ip show -g $RG -n $AGPUBLICIP_NAME --query "ipAddress" -o tsv
 In this section we will setup the AKS specific policies we want to enforce. To recap, for our given scenario that means:
 
 - Registry Whitelisting
+
+Use Azure Policy to whitelist Registry. 
+
+<del>
 
 ```bash
 # Create Allowed Repos Constraint Template
@@ -149,6 +158,7 @@ curl 100.64.2.4
 # Exit out of Pod
 exit
 ```
+</del>
 
 ## Setup Flow Logs and Traffic Analytics
 
@@ -170,7 +180,7 @@ For more details on usage scenarios click [here](https://docs.microsoft.com/en-u
 
 ## Next Steps
 
-[Cost Governance](/cost-governance/README.md)
+[Deploy App](deploy-app/README.md)
 
 ## Key Links
 

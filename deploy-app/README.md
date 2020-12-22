@@ -502,7 +502,7 @@ az network public-ip show -g $RG -n $AGPUBLICIP_NAME --query "ipAddress" -o tsv
 
 ## Next Steps
 
-[Day 2 Operations](/day2-operations/README.md)
+[Cost Governance](cost-governance/README.md)
 
 ## Key Links
 

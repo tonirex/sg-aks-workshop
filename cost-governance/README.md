@@ -20,16 +20,10 @@ kubectl apply -f https://raw.githubusercontent.com/kubecost/cost-analyzer-helm-c
 ### Install with Helm
 
 ```bash
-## Helm 2
-helm repo add kubecost https://kubecost.github.io/cost-analyzer/
-helm install kubecost/cost-analyzer --namespace kubecost --name kubecost --set kubecostToken="YWxnaWJib25AbWljcm9zb2Z0LmNvbQ==xm343yadf98"
-```
-
-```bash
 ## Helm 3
 kubectl create namespace kubecost
 helm repo add kubecost https://kubecost.github.io/cost-analyzer/
-helm install kubecost kubecost/cost-analyzer --namespace kubecost --set kubecostToken="YWxnaWJib25AbWljcm9zb2Z0LmNvbQ==xm343yadf98"
+helm install kubecost kubecost/cost-analyzer --namespace kubecost --set kubecostToken="YWxnaWJib25AbWljcm9zb2Z0LmNvbQ==xm343yadf98" --set persistentVolume.size=1G
 ```
 
 ### Check your deployment
