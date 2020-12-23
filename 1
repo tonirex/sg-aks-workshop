@@ -1,0 +1,152 @@
+# Please edit the object below. Lines beginning with a '#' will be ignored,
+# and an empty file will abort the edit. If an error occurs while saving this file will be
+# reopened with the relevant failures.
+#
+# pods "flux-79f6ddfd9b-xzdxv" was not valid:
+# * spec: Forbidden: pod updates may not change fields other than `spec.containers[*].image`, `spec.initContainers[*].image`, `spec.activeDeadlineSeconds` or `spec.tolerations` (only additions to existing tolerations)
+#   core.PodSpec{
+#   	Volumes:        []core.Volume{{Name: "git-key", VolumeSource: core.VolumeSource{Secret: &core.SecretVolumeSource{SecretName: "flux-git-deploy", DefaultMode: &256, Optional: &false}}}, {Name: "git-keygen", VolumeSource: core.VolumeSource{EmptyDir: &core.EmptyDirVolumeSource{Medium: "Memory"}}}, {Name: "flux-token-g7sjf", VolumeSource: core.VolumeSource{Secret: &core.SecretVolumeSource{SecretName: "flux-token-g7sjf", DefaultMode: &420}}}},
+#   	InitContainers: nil,
+#   	Containers: []core.Container{
+#   		{
+#   			Name:    "flux",
+#   			Image:   "docker.io/fluxcd/flux:1.21.0",
+#   			Command: nil,
+#   			Args: []string{
+#   				... // 5 identical elements
+#   				"--git-path=cluster-config",
+#   				"--sync-timeout=10m",
+# - 				"--git-timeout=5m",
+# + 				"--git-timeout=2m",
+#   			},
+#   			WorkingDir: "",
+#   			Ports:      nil,
+#   			... // 16 identical fields
+#   		},
+#   	},
+#   	EphemeralContainers: nil,
+#   	RestartPolicy:       "Always",
+#   	... // 25 identical fields
+#   }
+
+#
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2020-12-22T03:38:45Z"
+  generateName: flux-79f6ddfd9b-
+  labels:
+    name: flux
+    pod-template-hash: 79f6ddfd9b
+  name: flux-79f6ddfd9b-xzdxv
+  namespace: flux
+  ownerReferences:
+  - apiVersion: apps/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: ReplicaSet
+    name: flux-79f6ddfd9b
+    uid: 6785d733-c4ea-4bfd-a915-bb9a524922e3
+  resourceVersion: "1553"
+  selfLink: /api/v1/namespaces/flux/pods/flux-79f6ddfd9b-xzdxv
+  uid: 137525b5-d918-41a5-827d-2bce8933d470
+spec:
+  automountServiceAccountToken: true
+  containers:
+  - args:
+    - --memcached-service=memcached
+    - --ssh-keygen-dir=/var/fluxd/keygen
+    - --git-url=git@github.com:eggboy/sg-aks-workshop.git
+    - --git-branch=master
+    - --git-poll-interval=15s
+    - --git-path=cluster-config
+    - --sync-timeout=10m
+    - --git-timeout=5m
+    image: docker.io/fluxcd/flux:1.21.0
+    imagePullPolicy: IfNotPresent
+    name: flux
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /etc/fluxd/ssh
+      mountPropagation: None
+      name: git-key
+      readOnly: true
+    - mountPath: /var/fluxd/keygen
+      mountPropagation: None
+      name: git-keygen
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: flux-token-g7sjf
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  nodeName: aks-default-30804052-vmss000001
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: flux
+  serviceAccountName: flux
+  shareProcessNamespace: false
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - name: git-key
+    secret:
+      defaultMode: 256
+      optional: false
+      secretName: flux-git-deploy
+  - emptyDir:
+      medium: Memory
+    name: git-keygen
+  - name: flux-token-g7sjf
+    secret:
+      defaultMode: 420
+      secretName: flux-token-g7sjf
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2020-12-22T03:38:45Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2020-12-22T03:39:11Z"
+    status: "True"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2020-12-22T03:39:11Z"
+    status: "True"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2020-12-22T03:38:45Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: containerd://5b210a3b8ad4b76665f99fec67791d927d9c40cf5217f65776d075a0e36c1f8a
+    image: docker.io/fluxcd/flux:1.21.0
+    imageID: docker.io/fluxcd/flux@sha256:fbfb4e5ddbe28789e76fa645140c48cb9b4c3c39cf5d955ac1ace0256a11dfa2
+    lastState: {}
+    name: flux
+    ready: true
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2020-12-22T03:39:10Z"
+  hostIP: 100.64.1.35
+  phase: Running
+  podIP: 100.64.1.44
+  podIPs:
+  - ip: 100.64.1.44
+  qosClass: BestEffort
+  startTime: "2020-12-22T03:38:45Z"

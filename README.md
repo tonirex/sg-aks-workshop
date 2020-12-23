@@ -6,7 +6,7 @@ This repo is a **WORK IN PROGRESS**.
 
 Hello, and welcome to the workshop. This is a 2-day hands-on workshop focused on setting up AKS along with additional technologies to make it adhere to the governance and security needs of highly regulated customers.
 
-The workshop runs over 2 days and is meant to take an outside in approach. Meaning, we will start from the outside of the architecture and make our way inwards. It starts with focusing on Governance and Security decisions that need to be made before a single Azure resource is provisioned. We will then focus on decisions that need to get made prior to provisioning the cluster. Next, we will provision the cluster along with focusing on how to deploy common components post-provisioning. Once the cluster is configured, the next steps are to actually deploy workloads. Finally when the workloads are deployed, we will focus in on Day 2 operations when it comes to managing, maintaining and provising observability into the cluster.
+The workshop runs over 2 days and is meant to take an outside in approach. Meaning, we will start from the outside of the architecture and make our way inwards. It starts with focusing on Governance and Security decisions that need to be made before a single Azure resource is provisioned. We will then focus on decisions that need to get made prior to provisioning the cluster. Next, we will provision the cluster along with focusing on how to deploy common components post-provisioning. Once the cluster is configured, the next steps are to actually deploy workloads. Finally, when the workloads are deployed, we will focus on Day 2 operations when it comes to managing, maintaining and providing observability into the cluster.
 
 ## End Goal
 
@@ -26,13 +26,13 @@ The end goal is to take you from having a kubernetes setup that is unsecure by d
   2. [Cluster Pre-Provisioning](cluster-pre-provisioning/README.md)
   3. [Cluster Provisioning](cluster-provisioning/README.md)
   4. [Post-Provisioning](post-provisioning/README.md)
-  5. [Deploy App](deploy-app/README.md)
 
 ## Lab Guides - Day 2
 
-  1. [Cost Governance](cost-governance/README.md)
-  2. [Day 2 Operations](day2-operations/README.md)
-  3. [Validate Scenarios](validate-scenarios/README.md)
+  1. [Deploy App](deploy-app/README.md)
+  2. [Cost Governance](cost-governance/README.md)
+  3. [Day 2 Operations](day2-operations/README.md)
+  4. [Validate Scenarios](validate-scenarios/README.md)
 
 ## Prerequisites
 

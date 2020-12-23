@@ -101,7 +101,7 @@ Azure Policy used OPAv3 to enforce the Pod Security Policy, and it also provides
 # Look at Created Resources
 # Check Resources
 kubectl get crd | grep gatekeeper
-kubectl get constrainttemplate,k8sallowedrepos,config -n gatekeeper-system
+kubectl get constrainttemplate,config -n gatekeeper-system
 
 # Test out Allowed Registry Policy Against production Namespace
 kubectl run centosprod --image=centos -it --rm -n production
