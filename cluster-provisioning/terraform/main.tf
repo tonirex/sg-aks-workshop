@@ -1,14 +1,14 @@
-resource "azurerm_storage_account" "storage" {
-  name                     = "${var.prefix}logs"
-  resource_group_name      = var.resource_group
-  location                 = var.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
+#resource "azurerm_storage_account" "storage" {
+#  name                     = "${var.prefix}logs"
+#  resource_group_name      = var.resource_group
+#  location                 = var.location
+#  account_tier             = "Standard"
+# account_replication_type = "LRS"
 
-  tags = {
-    environment = "logs"
-  }
-}
+#  tags = {
+#    environment = "logs"
+#  }
+#}
 
 resource "azurerm_container_registry" "acr" {
   name                = "${var.prefix}acr"
@@ -93,6 +93,7 @@ resource "azurerm_kubernetes_cluster" "demo" {
     service_cidr       = var.service_cidr
     dns_service_ip     = var.dns_service_ip
     docker_bridge_cidr = var.docker_bridge_cidr
+    outbound_type      = "userDefinedRouting"
   }
 
   lifecycle {
@@ -104,15 +105,14 @@ resource "azurerm_kubernetes_cluster" "demo" {
     }
 }
 
-data "azurerm_virtual_network" "vnet" {
-  name                = var.azure_vnet_name
-  resource_group_name = var.resource_group
+data "azurerm_resource_group" "rg" {
+  name = var.resource_group
 }
 
 resource "azurerm_role_assignment" "role1" {
   depends_on = [azurerm_kubernetes_cluster.demo]
-  scope                = data.azurerm_virtual_network.vnet.id
-  role_definition_name = "Contributor"
+  scope                = data.azurerm_resource_group.rg.id
+  role_definition_name = "Network Contributor"
   principal_id         = azurerm_kubernetes_cluster.demo.identity[0].principal_id
 }
 
@@ -120,5 +120,5 @@ resource "azurerm_role_assignment" "role2" {
   depends_on = [azurerm_kubernetes_cluster.demo]
   scope                = azurerm_kubernetes_cluster.demo.id
   role_definition_name = "Monitoring Metrics Publisher"
-  principal_id         = azurerm_kubernetes_cluster.demo.identity[0].principal_id
+  principal_id         = azurerm_kubernetes_cluster.demo.addon_profile[0].oms_agent[0].oms_agent_identity[0].object_id
 }
