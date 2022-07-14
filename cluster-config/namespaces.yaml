@@ -25,3 +25,10 @@ metadata:
   name: ingress
   labels:
     app: ingress
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ingress2222
+  labels:
+    app: ingress2222
