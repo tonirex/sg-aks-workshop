@@ -59,14 +59,6 @@ So how do I capture those Kubernetes audit logs and where should they be put? Di
 
 - Click [Enable Kubernetes Logs](https://docs.microsoft.com/en-us/azure/aks/view-master-logs) for more details and direct **kube-audit** logs to an Azure Storage Account, **NOT Log Analytics**.
 
-## Setup ACR Permissions
-
-This section sets up the connection between AKS and Azure Container Registry (ACR).
-
-```bash
-# Update Azure Container Registries (ACR) in a Table
-az aks update -n $NAME-aks -g $RG --attach-acr $ACR_NAME
-```
 
 ## Find Public IP of AKS api-server Endpoint
 

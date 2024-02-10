@@ -1,7 +1,3 @@
-# WORK IN PROGRESS
-
-This repo is a **WORK IN PROGRESS**.
-
 # Cloud Native App Governance + Security Workshop
 
 Hello, and welcome to the workshop. This is a 2-day hands-on workshop focused on setting up AKS along with additional technologies to make it adhere to the governance and security needs of highly regulated customers.
@@ -10,7 +6,7 @@ The workshop runs over 2 days and is meant to take an outside in approach. Meani
 
 ## End Goal
 
-The end goal is to take you from having a kubernetes setup that is unsecure by default, to an Enterprise ready configuration that is secure by default. To help understand what that means please see the following illustrations showing a before and after setup.
+The end goal is to take you from having a AKS setup that is unsecure by default, to an Enterprise ready configuration that is secure by default. To help understand what that means please see the following illustrations showing a before and after setup.
 
 ### Before Picture
 
@@ -25,7 +21,7 @@ The end goal is to take you from having a kubernetes setup that is unsecure by d
   1. [Cluster Design](cluster-design/README.md)
   2. [Cluster Pre-Provisioning](cluster-pre-provisioning/README.md)
   3. [Cluster Provisioning](cluster-provisioning/README.md)
-  4. [Post-Provisioning](post-provisioning/README.md)
+  4. [Post-Provisioning](cluster-post-provisioning/README.md)
 
 ## Lab Guides - Day 2
 
@@ -38,20 +34,18 @@ The end goal is to take you from having a kubernetes setup that is unsecure by d
 
 The following are the requirements to **start**.
 
-- Azure Account | [Azure Portal](https://portal.azure.com)
+- Azure Account | [Azure Portal](https://portal.azure.com){:target="_blank" rel="noopener"}
 
   - Ability to create AKS Clusters
   - Ability to create Azure Service Principals or access to one that can create AKS Clusters
 
-- Azure CLI | [Install CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest)
+- Azure CLI | [Install CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest){:target="_blank" rel="noopener"}
 
-- Kubectl CLI | [Install kubectl with Azure CLI](https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough#connect-to-the-cluster)
+- Kubectl CLI | [Install kubectl with Azure CLI](https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough#connect-to-the-cluster){:target="_blank" rel="noopener"}
 
-  - Minimum Version: 1.19.0
+  - Minimum Version: 1.27.0+
 
 - Git | [Git SCM](https://git-scm.com/downloads)
-
-  - Minimum Version: 2.22
 
 - GitHub Account | [GitHub Account](https://help.github.com/en/github/getting-started-with-github/signing-up-for-a-new-github-account)
 
@@ -59,14 +53,9 @@ The following are the requirements to **start**.
 
 - Terraform | [Terraform Download](https://www.terraform.io/downloads.html)
 
-  - Minimum Version: v0.13.4+
+  - Minimum Version: v1.5.7+
 
-- Docker Community Edition (CE) | [Install CE](https://docs.docker.com/v17.09/engine/installation/)
-
-  - [Install Docker for Mac](https://docs.docker.com/v17.09/docker-for-mac/install/)
-  - [Install Docker for Windows](https://docs.docker.com/v17.09/docker-for-windows/install/)
-
-- Code Editor | [Install VS Code](https://code.visualstudio.com/download)
+- Code Editor | [Install VS Code](https://code.visualstudio.com/download){:target="_blank" rel="noopener"}
 
 ## Fork the Repo
 

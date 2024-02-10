@@ -15,9 +15,9 @@ resource "azurerm_application_gateway" "network" {
   location            = var.location
 
   sku {
-    name     = "WAF_V2"
-    tier     = "WAF_V2"
-    capacity = 2
+    name     = "WAF_v2"
+    tier     = "WAF_v2"
+    capacity = 1
   }
 
   waf_configuration {
@@ -82,6 +82,7 @@ resource "azurerm_application_gateway" "network" {
 
   request_routing_rule {
     name                       = local.request_routing_rule_name
+    priority                   = 9
     rule_type                  = "Basic"
     http_listener_name         = local.listener_name
     backend_address_pool_name  = local.backend_address_pool_name

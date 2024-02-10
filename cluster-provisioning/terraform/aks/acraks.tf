@@ -10,6 +10,10 @@
 #  }
 #}
 
+data "azurerm_resource_group" "rg" {
+  name = var.resource_group
+}
+
 resource "azurerm_container_registry" "acr" {
   name                = "${var.prefix}acr"
   resource_group_name = var.resource_group
@@ -44,6 +48,19 @@ resource "azurerm_kubernetes_cluster" "demo" {
   resource_group_name = var.resource_group
   kubernetes_version  = var.kubernetes_version
 
+  azure_active_directory_role_based_access_control {
+    managed            = "true"
+    azure_rbac_enabled = "false"
+  }
+
+  network_profile {
+    network_plugin    = var.network_plugin
+    network_policy    = var.network_policy
+    service_cidr      = var.service_cidr
+    dns_service_ip    = var.dns_service_ip
+    outbound_type     = "userDefinedRouting"
+  }
+
   linux_profile {
     admin_username = var.admin_username
 
@@ -67,58 +84,25 @@ resource "azurerm_kubernetes_cluster" "demo" {
     type = "SystemAssigned"
   }
 
-  role_based_access_control {
-    enabled = true
-
-    azure_active_directory {
-      managed = true
-    }
-  }
-  addon_profile {
-    kube_dashboard {
-      enabled = false
-    }
-    oms_agent {
-      enabled                    = true
-      log_analytics_workspace_id = azurerm_log_analytics_workspace.demo.id
-    }
-    azure_policy {
-      enabled = true
-    }
-  }
-  network_profile {
-    load_balancer_sku  = "standard"
-    network_plugin     = var.network_plugin
-    network_policy     = var.network_policy
-    service_cidr       = var.service_cidr
-    dns_service_ip     = var.dns_service_ip
-    docker_bridge_cidr = var.docker_bridge_cidr
-    outbound_type      = "userDefinedRouting"
+  oms_agent {
+    log_analytics_workspace_id = azurerm_log_analytics_workspace.demo.id
   }
 
-  lifecycle {
-        ignore_changes = [
-            # default_node_pool[0].node_count,
-            default_node_pool[0].vnet_subnet_id,
-            windows_profile
-        ]
-    }
-}
-
-data "azurerm_resource_group" "rg" {
-  name = var.resource_group
+  azure_policy_enabled = true
+  workload_identity_enabled = true
+  oidc_issuer_enabled = true
 }
 
 resource "azurerm_role_assignment" "role1" {
-  depends_on = [azurerm_kubernetes_cluster.demo]
+  depends_on           = [azurerm_kubernetes_cluster.demo]
   scope                = data.azurerm_resource_group.rg.id
   role_definition_name = "Network Contributor"
   principal_id         = azurerm_kubernetes_cluster.demo.identity[0].principal_id
 }
 
-resource "azurerm_role_assignment" "role2" {
-  depends_on = [azurerm_kubernetes_cluster.demo]
-  scope                = azurerm_kubernetes_cluster.demo.id
-  role_definition_name = "Monitoring Metrics Publisher"
-  principal_id         = azurerm_kubernetes_cluster.demo.addon_profile[0].oms_agent[0].oms_agent_identity[0].object_id
+resource "azurerm_role_assignment" "example" {
+  principal_id                     = azurerm_kubernetes_cluster.demo.kubelet_identity[0].object_id
+  role_definition_name             = "AcrPull"
+  scope                            = azurerm_container_registry.acr.id
+  skip_service_principal_aad_check = true
 }

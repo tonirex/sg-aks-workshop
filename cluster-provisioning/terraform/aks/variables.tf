@@ -8,11 +8,12 @@ variable "resource_group" {
 
 variable "location" {
   default     = "southeastasia"
+  type        = string
   description = "The Azure Region in which all resources will be provisioned in"
 }
 
 variable "kubernetes_version" {
-  default     = "1.19.3"
+  default     = "1.27.7"
   description = "The version of Kubernetes you want deployed to your cluster. Please reference the command: az aks get-versions --location eastus -o table"
 }
 
@@ -41,7 +42,7 @@ variable "agent_count" {
 }
 
 variable "vm_size" {
-  default     = "Standard_DS3_v2"
+  default     = "standard_b4as_v2"
   description = "The Node type and size based on Azure VM SKUs Reference: az vm list-sizes --location eastus -o table"
 }
 variable "os_disk_size_gb" {
@@ -51,13 +52,8 @@ variable "os_disk_size_gb" {
 }
 
 variable "max_pods" {
-  default     = 30
+  default     = 110
   description = "The maximum number of pods that can run on each agent. Changing this forces a new resource to be created."
-}
-
-variable "pool_type" {
-  default     = "VirtualMachineScaleSets"
-  description = "Uses VMSS as the backing scale set"
 }
 
 variable "network_plugin" {
@@ -113,18 +109,4 @@ variable "azure_aag_name" {
 variable "azure_aag_public_ip" {
   default     = ""
   description = "Public IP For App Gateway"
-}
-
-variable "github_organization" {
-  description = "Name of the Github Organisation"
-}
-
-variable "github_repository" {
-  default     = "sg-aks-workshop"
-  description = "Name of the Github repository for Flux"
-}
-
-variable "github_token" {
-  description = "github token to authenticate"
-
 }

@@ -1,0 +1,41 @@
+# This file is maintained automatically by "terraform init".
+# Manual edits may be lost in future updates.
+
+provider "registry.terraform.io/hashicorp/azurerm" {
+  version     = "3.91.0"
+  constraints = "3.91.0"
+  hashes = [
+    "h1:8hMFuaTQsZIV69D0J/W+6hSlhRRDzYSpC0Eg9yWYF0o=",
+    "zh:13928b71b1235783f3f877a799e28fb91e50512b051eb8ccb370500fc140cf3f",
+    "zh:3264341657e9ff3963d69b0fa088f64665349e2a29b2f3aeb4deee6d9d7584b7",
+    "zh:467a2ddd2eee26353db65e949bfbe533481ca0fb53c152724380b63a308f11b9",
+    "zh:6133e57087167b163180df3a77fab0c63b3e11609d139d39db8d3be3d6ec7ccd",
+    "zh:6df24730bc9247647ffb44832c3c64e45ab731dd83a3592d33d28235a453235a",
+    "zh:775aae148223a4a86e2dd25533a95a5fea4817085b6c5e643a7192453270cd68",
+    "zh:89d51148c7c123685d3e2f7e291888a3af009656e5c0ad66235a7c686ecb19d2",
+    "zh:9c89552051226eeb7c0fc66ad5aa57d1d0f5acc1d56afad06b6596707ae6c85e",
+    "zh:c4f3bc269837fa3b6ad803de2c7d1125dd791d78a521dcad2e7a63b905a13a53",
+    "zh:e48f05de1ffdcc998c5ff915570fb0557c7ac1d3af971dd76aff82e66d45bf06",
+    "zh:f1945716c7b9c23c25ca9fb4a68f27b6cfa25f5d235112c31f9412eba47f93c6",
+    "zh:f569b65999264a9416862bca5cd2a6177d94ccb0424f3a4ef424428912b9cb3c",
+  ]
+}
+
+provider "registry.terraform.io/hashicorp/kubernetes" {
+  version = "2.25.2"
+  hashes = [
+    "h1:T1WAQt40cAk721H0AM/eZ5YuodJaIfS8r3Tu7rKCJJE=",
+    "zh:044788ac936e0e8ece8f78a2e4e366ecd435ea8235388eaf2cbc8e7975d9d970",
+    "zh:24f5ff01df91f51f00ee7ff39430adeb63bb2ca4ea0042e68f06d6b65808c02f",
+    "zh:49984aa0aa1faa8c4f01e8faa039322f1e6fdaeab0b7e32f5c6e96edfde36a38",
+    "zh:4eeceaff56bac9fc782e7e33f157fa2c7e9a47b2c3c3d12da2642c312ace73f6",
+    "zh:4f49b6419345960d5af475e0200c243af4c9c140b0ee64799fe1fc9b023c49ea",
+    "zh:7958414d516867a2263a978792a24843f80023fb233cf051ff4095adc9803d85",
+    "zh:c633a755fc95e9ff0cd73656f052947afd85883a0987dde5198113aa48474156",
+    "zh:cbfe958d119795004ce1e8001449d01c056fa2a062b51d07843d98be216337d7",
+    "zh:cfb85392e18768578d4c943438897083895719be678227fd90efbe3500702a56",
+    "zh:d705a661ed5da425dd236a48645bec39fe78a67d2e70e8460b720417cbf260ac",
+    "zh:ddd7a01263da3793df4f3b5af65f166307eed5acf525e51e058cda59009cc856",
+    "zh:f569b65999264a9416862bca5cd2a6177d94ccb0424f3a4ef424428912b9cb3c",
+  ]
+}
