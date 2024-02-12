@@ -67,6 +67,9 @@ spec:
           cidr: 0.0.0.0/0
       ports:
       - port: 443
+        protocol: TCP
+      - port: 80
+        protocol: TCP
     - to:
       - namespaceSelector:
           matchLabels:
