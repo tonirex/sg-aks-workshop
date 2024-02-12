@@ -1,0 +1,87 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aks-fqdn-controller
+  labels:
+    app: aks-fqdn-controller
+spec:
+  publishNotReadyAddresses: true
+  ports:
+    - port: 8443
+      targetPort: 8443
+  selector:
+    app: aks-fqdn-controller
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aks-fqdn-controller
+  labels:
+    app: aks-fqdn-controller
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: aks-fqdn-controller
+  template:
+    metadata:
+      name: aks-fqdn-controller
+      labels:
+        app: aks-fqdn-controller
+    spec:
+      containers:
+        - name: mutator
+          image: eggboy/aks-fqdn-mutating-webhook:0.0.1
+          ports:
+            - containerPort: 8443
+              name: https
+          imagePullPolicy: Always
+          env:
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: jks-password-secret
+            - name: CERT_PATH
+              value: /opt/secret
+          volumeMounts:
+            - mountPath: /opt/secret
+              name: cert
+      volumes:
+        - name: cert
+          secret:
+            secretName: aks-fqdn-controller-cert-tls-secret
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: aks-fqdn-controller
+  labels:
+    app: aks-fqdn-controller
+  annotations:
+    cert-manager.io/inject-ca-from: default/aks-fqdn-controller-cert
+webhooks:
+- admissionReviewVersions:
+  - v1
+  name: aks-fqdn-controller.default.svc.cluster.local
+  clientConfig:
+    service:
+      name: aks-fqdn-controller
+      namespace: default
+      path: /mutate
+      port: 8443
+  rules:
+  - operations: ["CREATE"]
+    apiGroups: [""]
+    apiVersions: ["v1"]
+    resources: ["pods"]
+  sideEffects: NoneOnDryRun
+  timeoutSeconds: 5
+  reinvocationPolicy: Never
+  failurePolicy: Fail
+  namespaceSelector:
+    matchExpressions:
+      - key: kubernetes.io/metadata.name
+        operator: In
+        values: [ "app-routing-system", "flux-system" ]

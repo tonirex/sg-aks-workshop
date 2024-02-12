@@ -10,6 +10,24 @@
 #  }
 #}
 
+resource "tls_private_key" "ssh" {
+  algorithm = "RSA"
+  rsa_bits  = "4096"
+}
+
+resource "null_resource" "save-key" {
+  triggers = {
+    key = tls_private_key.ssh.private_key_pem
+  }
+
+  provisioner "local-exec" {
+    command = <<EOF
+      echo "${tls_private_key.ssh.private_key_openssh}" > id_rsa
+      echo "${tls_private_key.ssh.public_key_openssh}" > id_rsa.pub
+    EOF
+  }
+}
+
 data "azurerm_resource_group" "rg" {
   name = var.resource_group
 }
@@ -41,12 +59,13 @@ resource "azurerm_log_analytics_solution" "demo" {
     product   = "OMSGallery/ContainerInsights"
   }
 }
-resource "azurerm_kubernetes_cluster" "demo" {
+resource "azurerm_kubernetes_cluster" "aks" {
   name                = "${var.prefix}-aks"
   location            = var.location
   dns_prefix          = "${var.prefix}-aks"
   resource_group_name = var.resource_group
   kubernetes_version  = var.kubernetes_version
+  sku_tier            = "Standard"
 
   azure_active_directory_role_based_access_control {
     managed            = "true"
@@ -54,18 +73,18 @@ resource "azurerm_kubernetes_cluster" "demo" {
   }
 
   network_profile {
-    network_plugin    = var.network_plugin
-    network_policy    = var.network_policy
-    service_cidr      = var.service_cidr
-    dns_service_ip    = var.dns_service_ip
-    outbound_type     = "userDefinedRouting"
+    network_plugin = var.network_plugin
+    network_policy = var.network_policy
+    service_cidr   = var.service_cidr
+    dns_service_ip = var.dns_service_ip
+    outbound_type  = "userDefinedRouting"
   }
 
   linux_profile {
     admin_username = var.admin_username
 
     ssh_key {
-      key_data = file(var.public_ssh_key_path)
+      key_data = trimspace(tls_private_key.ssh.public_key_openssh)
     }
   }
 
@@ -88,21 +107,48 @@ resource "azurerm_kubernetes_cluster" "demo" {
     log_analytics_workspace_id = azurerm_log_analytics_workspace.demo.id
   }
 
-  azure_policy_enabled = true
+  azure_policy_enabled      = true
   workload_identity_enabled = true
-  oidc_issuer_enabled = true
+  oidc_issuer_enabled       = true
 }
 
-resource "azurerm_role_assignment" "role1" {
-  depends_on           = [azurerm_kubernetes_cluster.demo]
-  scope                = data.azurerm_resource_group.rg.id
+resource "azurerm_monitor_diagnostic_setting" "azurerm-kubernetes-cluster" {
+  name                       = "${var.prefix}-aks-diag"
+  target_resource_id         = azurerm_kubernetes_cluster.aks.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.demo.id
+  log_analytics_destination_type = "Dedicated"
+
+  enabled_log {
+    category = "kube-audit"
+  }
+
+  enabled_log {
+    category = "kube-audit-admin"
+  }
+
+  metric {
+    category = "AllMetrics"
+    enabled  = true
+  }
+}
+
+resource "azurerm_role_assignment" "network" {
   role_definition_name = "Network Contributor"
-  principal_id         = azurerm_kubernetes_cluster.demo.identity[0].principal_id
+  depends_on           = [azurerm_kubernetes_cluster.aks]
+  scope                = data.azurerm_resource_group.rg.id
+  principal_id         = azurerm_kubernetes_cluster.aks.identity[0].principal_id
 }
 
-resource "azurerm_role_assignment" "example" {
-  principal_id                     = azurerm_kubernetes_cluster.demo.kubelet_identity[0].object_id
+resource "azurerm_role_assignment" "acr" {
   role_definition_name             = "AcrPull"
   scope                            = azurerm_container_registry.acr.id
+  principal_id                     = azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
+  skip_service_principal_aad_check = true
+}
+
+resource "azurerm_role_assignment" "ci" {
+  role_definition_name             = "Monitoring Metrics Publisher"
+  scope                            = azurerm_kubernetes_cluster.aks.id
+  principal_id                     = azurerm_kubernetes_cluster.aks.oms_agent[0].oms_agent_identity[0].object_id
   skip_service_principal_aad_check = true
 }

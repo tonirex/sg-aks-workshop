@@ -26,6 +26,7 @@ The end goal is to take you from having a AKS setup that is unsecure by default,
 ## Lab Guides - Day 2
 
   1. [Deploy App](deploy-app/README.md)
+  2. [Cluster Security](cluster-security/README.md) 
   2. [Cost Governance](cost-governance/README.md)
   3. [Day 2 Operations](day2-operations/README.md)
   4. [Validate Scenarios](validate-scenarios/README.md)
@@ -34,16 +35,16 @@ The end goal is to take you from having a AKS setup that is unsecure by default,
 
 The following are the requirements to **start**.
 
-- Azure Account | [Azure Portal](https://portal.azure.com){:target="_blank" rel="noopener"}
+- Azure Account | [Azure Portal](https://portal.azure.com)
 
   - Ability to create AKS Clusters
   - Ability to create Azure Service Principals or access to one that can create AKS Clusters
 
-- Azure CLI | [Install CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest){:target="_blank" rel="noopener"}
+- Azure CLI | [Install CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest)
 
-- Kubectl CLI | [Install kubectl with Azure CLI](https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough#connect-to-the-cluster){:target="_blank" rel="noopener"}
+- Kubectl CLI | [Install kubectl with Azure CLI](https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough#connect-to-the-cluster)
 
-  - Minimum Version: 1.27.0+
+  - `az aks install-cli`
 
 - Git | [Git SCM](https://git-scm.com/downloads)
 
@@ -55,7 +56,7 @@ The following are the requirements to **start**.
 
   - Minimum Version: v1.5.7+
 
-- Code Editor | [Install VS Code](https://code.visualstudio.com/download){:target="_blank" rel="noopener"}
+- Code Editor | [Install VS Code](https://code.visualstudio.com/download)
 
 ## Fork the Repo
 

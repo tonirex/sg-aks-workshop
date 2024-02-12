@@ -2,46 +2,14 @@
 
 This section walks us through the key considerations that need to be taken into account when thinking about how to operate AKS after everything is provisioned and running. In this section we will cover the following topic:
 
-- GitOps
 - Upgrading Your Cluster
 - Resource Management
-- Scaling
-  - Cluster Scaling
-  - Application Scaling
 - Daily Monitoring
 - Logging
 - Alerting
 - Backup/DR
 
 We will implement some of the topics throughout this lab where others we will talk about the different approaches you can use for day 2 Operations.
-
-## GitOps Approach For Managing Multiple Clusters
-
-GitOps was popularized by the folks at Weaveworks, and the idea and fundamentals were based on their experience of running Kubernetes in production. GitOps takes the concepts of the software development life cycle and applies them to operations. With GitOps, yourGit repository becomes your source of truth, and your cluster is synchronized to the configured Git repository. For example, if you update a Kubernetes Deployment manifest, those configuration changes are automatically reflected in the cluster state.
-
-By using this method, you can make it easier to maintain multiple clusters that are consistent and avoid configuration drift across the fleet.GitOps allows you to declaratively describe your clusters for multiple environments and drives to maintain that state for the cluster.The practice of GitOps can apply to both application delivery and operations, but in this chapter, we focus on using it to manage clusters and operational tooling.
-
-Weaveworks Flux was one of the first tools to enable the GitOps approach, and it’s the tool we will use throughout the rest of the chapter. There are many new tools that have been released into the cloud-native ecosystem that are worth a look, such as Argo CD, from the folks at Intuit, which has also been widely adopted for the GitOps approach.
-
-![GitOps](./img/gitops.png)
-
-If you remember back in the __Cluster Provisioning__ section we talked about how we used Flux to bootstrap components when we provisioned the cluster. To demonstrate how the cluster synchronizes with our git repo we will delete one of the namespaces and see how it automatically gets synchronized back to the state that is stored in Github.
-
-First list the namespace to see which ones were configured from our git repo.
-
-```bash
-# First list the namespace to see which ones were configured from our git repo.
-kubectl get ns
-
-# Now we'll delete one of the namespaces.
-kubectl delete ns dummy-ns
-
-# If you run the following command you'll see that the dummy-ns namespace is no longer listed.
-kubectl get ns
-
-# Now if you watch the namespace you will see it automatically appear after about 1 minutes (Sync time is configurable).
-kubectl get ns -w
-```
 
 ## Resource Management
 
@@ -90,8 +58,6 @@ kubectl get limitrange dev-limit-range -n dev -o yaml
 ```
 
 **It can't be stated enough of the importance of requests and limits to ensure your cluster is in a healthy state. You can read more on these topics in the **Key Links** at the end of this lab.**
-
-## Scaling Resources
 
 ## Logging And Alerts
 

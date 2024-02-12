@@ -1,0 +1,38 @@
+kind: Secret
+apiVersion: v1
+metadata:
+  name: jks-password-secret
+data:
+  password: Y2hhbmdlaXQ=
+type: Opaque
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: aks-fqdn-controller-ca-issuer
+  namespace: default
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: aks-fqdn-controller-cert
+  namespace: default
+spec:
+  keystores:
+    jks:
+      passwordSecretRef:
+        name: jks-password-secret
+        key: password
+      create: true
+  dnsNames:
+    - aks-fqdn-controller
+    - aks-fqdn-controller.default
+    - aks-fqdn-controller.default.svc
+    - aks-fqdn-controller.default.svc.cluster.local
+  secretName: aks-fqdn-controller-cert-tls-secret
+  commonName: aks-fqdn-controller
+  issuerRef:
+    name: aks-fqdn-controller-ca-issuer
+    kind: Issuer

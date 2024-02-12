@@ -4,11 +4,18 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "=3.91.0"
     }
+    tls = {
+      source  = "hashicorp/tls"
+      version = "4.0.5"
+    }
   }
 }
 
 provider "azurerm" {
   features {}
+}
+
+provider "tls" {
 }
 
 #provider "kubernetes" {

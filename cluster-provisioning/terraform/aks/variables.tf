@@ -37,7 +37,7 @@ variable "admin_username" {
   description = "The username assigned to the admin user on the OS of the AKS nodes if SSH access is ever needed"
 }
 variable "agent_count" {
-  default     = "2"
+  default     = "3"
   description = "The starting number of Nodes in the AKS cluster"
 }
 
@@ -58,7 +58,7 @@ variable "max_pods" {
 
 variable "network_plugin" {
   default     = "azure"
-  description = "Can either be azure or kubenet. azure will use Azure subnet IPs for Pod IPs. Kubenet you need to use the pod-cidr variable below"
+  description = "Can be either azure or kubenet. azure will use Azure subnet IPs for Pod IPs. Kubenet you need to use the pod-cidr variable below. Azure CNI Overlay is also supported."
 }
 
 variable "network_policy" {
@@ -79,11 +79,6 @@ variable "service_cidr" {
 variable "dns_service_ip" {
   default     = "192.168.0.10"
   description = "The IP address that will be assigned to the CoreDNS or KubeDNS service inside of Kubernetes for Service Discovery. Must start at the .10 or higher of the svc-cidr range"
-}
-
-variable "docker_bridge_cidr" {
-  default     = "172.22.0.1/29"
-  description = "The IP address CIDR block to be assigned to the Docker container bridge on each node. If connecting to another peer or to you On-Premises network this CIDR block SHOULD NOT overlap with existing BGP learned routes"
 }
 
 variable "azure_vnet_name" {

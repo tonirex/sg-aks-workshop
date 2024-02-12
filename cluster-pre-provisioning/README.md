@@ -1,6 +1,6 @@
 # Cluster Pre-Provisioning
 
-This section walks through all of the prerequisites that should be completed before provisioning the Azure Kubernetes Service (AKS) cluster. Most organizations have existing virtual networks they would like to deploy the cluster into, with networking rules that control ingress and egress traffic.
+This section walks through all the prerequisites that should be completed before provisioning the Azure Kubernetes Service (AKS) cluster. Most organizations have existing virtual networks they would like to deploy the cluster into, with networking rules that control ingress and egress traffic.
 
 For the purpose of this workshop, we will be using Azure Firewall to control egress traffic destined for the Internet or to simulate going on-premises. Network Security Groups (NSGs) and User-Defined Routes (UDRs) will be used to control North/South traffic in and out of the AKS cluster itself.
 
@@ -19,7 +19,7 @@ export ILBSUBNET_NAME="${PREFIX}-ilbsubnet"
 export APPGWSUBNET_NAME="${PREFIX}-appgwsubnet"
 # NOTE: DO NOT CHANGE FWSUBNET_NAME - This is currently a requirement for Azure Firewall.
 export FWSUBNET_NAME="AzureFirewallSubnet"
-export FWNAME="${PREFIX}fw"
+export FWNAME="${PREFIX}-fw"
 export FWPUBLICIP_NAME="${PREFIX}-fwpublicip"
 export FWIPCONFIG_NAME="${PREFIX}-fwconfig"
 export FWROUTE_TABLE_NAME="${PREFIX}-fwrt"
@@ -36,7 +36,7 @@ source ./env.sh
 
 ## Create Resource Group
 
-This section leverages the variables from above and creates the initial Resource Group where all of the subsequent resources will be deployed.
+This section leverages the variables from above and creates the initial Resource Group where all the subsequent resources will be deployed.
 
 **For the SUBID (Azure Subscription ID), be sure to update your Subscription Name. If you do not know it, feel free to copy and paste your ID directly in. We will need the SUBID variable when working with Azure Resource IDs later in the walkthrough.**
 
@@ -98,11 +98,11 @@ This section walks through setting up Azure Firewall inbound and outbound rules.
 
 **NOTE: There are no inbound rules required for AKS to run. The only time an inbound rule is required is to expose a workload/service.**
 
-First, we will create a Public IP address. Then we will create the Azure Firewall, along with all of the Network (think ports and protocols) and Application (think egress traffic based on FQDNs) rules.
+First, we will create a Public IP address. Then we will create the Azure Firewall, along with all the Network (think ports and protocols) and Application (think egress traffic based on FQDNs) rules.
 
-If you want to lockdown destination IP Addresses on some of the firewall rules, you will have to use the destination IP Addresses for the datacenter region you are deploying into; this is based on how AKS communicates with the managed control plane. The list of IP Addresses per region in XML format can be found and downloaded by clicking [here](https://www.microsoft.com/en-us/download/details.aspx?id=56519).
+If you want to lock down destination IP Addresses on some of the firewall rules, you will have to use the destination IP Addresses for the datacenter region you are deploying into; this is based on how AKS communicates with the managed control plane. The list of IP Addresses per region in XML format can be found and downloaded by clicking [here](https://www.microsoft.com/en-us/download/details.aspx?id=56519).
 
-**NOTE: Azure Firewall, like other Network Virtual Appliances (NVAs), can be costly; please be aware of this when deploying, especially if you intend to leave everything running.**
+**NOTE: Azure Firewall, just like any other Network Virtual Appliances (NVAs), can be costly; please be aware of this when deploying, especially if you intend to leave everything running.**
 
 ```bash
 # Add the Azure Firewall extension to Azure CLI in case you do not already have it.
@@ -159,7 +159,7 @@ az network firewall application-rule create -g $RG -f $FWNAME \
  -n 'required' \
  --source-addresses '*' \
  --protocols 'http=80' 'https=443' \
- --target-fqdns 'mcr.microsoft.com' '*.data.mcr.microsoft.com' 'management.azure.com' 'login.microsoftonline.com' 'packages.microsoft.com' 'acs-mirror.azureedge.net' 'security.ubuntu.com' 'azure.archive.ubuntu.com' 'changelogs.ubuntu.com' 'vault.azure.net' 'data.policy.core.windows.net' 'store.policy.core.windows.net' 'dc.services.visualstudio.com' '*.blob.core.windows.net' '$LOCATION.dp.kubernetesconfiguration.azure.com' '*github.com'
+ --target-fqdns 'mcr.microsoft.com' '*.data.mcr.microsoft.com' 'management.azure.com' 'login.microsoftonline.com' 'packages.microsoft.com' 'acs-mirror.azureedge.net' 'security.ubuntu.com' 'azure.archive.ubuntu.com' 'changelogs.ubuntu.com' 'vault.azure.net' 'data.policy.core.windows.net' 'store.policy.core.windows.net' 'dc.services.visualstudio.com' '*.blob.core.windows.net' '$LOCATION.dp.kubernetesconfiguration.azure.com' '*github.com' '*quay.io' '*letsencrypt.org' '*gcr.io' '*googleapis.com'
 
 # Single F/W Rule
 az network firewall application-rule create -g $RG -f $FWNAME \
@@ -181,7 +181,7 @@ az network vnet subnet update -g $RG --vnet-name $VNET_NAME --name $AKSSUBNET_NA
 
 ## Create Public IP Address for Azure Application Gateway
 
-This section walks through creating a Public IP address for use with a Web Application Firewall (WAF). For the purposes of this workshop, we will be using Azure Application Gateway as the WAF and it will be created as part of the AKS provisioning process.
+This section walks through creating a Public IP address for use with a Web Application Firewall (WAF). For the purposes of this workshop, we will be using Azure Application Gateway as the WAF, and it will be created as part of the AKS provisioning process.
 
 ```bash
 # Create Public IP for use with WAF (Azure Application Gateway)

@@ -2,7 +2,39 @@
 
 This section walks us through steps that need to get performed after the cluster has been provisioned. These steps can easily be automated as part of a pipeline, but are explicitly pulled out here for visibility.
 
-## Test Post Configuration
+## Enable AKS Cost Analysis
+
+We will cover the topic of cost governance in Day 2. As it requires enabling add-on in Day 1 to populate the data, we will enable the add-on now. 
+
+```bash
+az feature register --namespace "Microsoft.ContainerService" --name "ClusterCostAnalysis"
+az feature show --namespace "Microsoft.ContainerService" --name "ClusterCostAnalysis"
+az provider register --namespace Microsoft.ContainerService
+az aks update --name ${PREFIX}-aks --resource-group ${PREFIX}-rg --enable-cost-analysis
+```
+
+
+
+
+## Find Public IP of AKS api-server Endpoint
+
+This section shows how to find the Public IP (PIP) of the AKS cluster to be able to add it to firewalls for IP whitelisting purposes.
+
+```bash
+# Get API-Server IP
+kubectl get endpoints --namespace default kubernetes
+```
+
+## Find Public IP of Azure Application Gateway used for WAF
+
+This section shows how to find the Public IP Address of the Azure Application Gateway which is used as a WAF, and the Ingress point for workloads into the Cluster.
+
+```bash
+# Retrieve the Public IP Address of the App Gateway.
+az network public-ip show -g $RG -n $AGPUBLICIP_NAME --query "ipAddress" -o tsv
+```
+
+## Test Cluster Post Provisioning
 
 This is a quick test to make sure that Pods can be created, and the Ingress Controller default backend is set up correctly.
 
@@ -45,11 +77,14 @@ curl www.superman.com
 exit
 ```
 
+
+
+
 ## Kubernetes Audit Logs
 
 There is an overwhelming need for organizations to capture all data that they can in case they need it. The Kubernetes audit logs fall into this bucket. It produces a ton of data that chews up storage, and most organizations are not sure what to do with.
 
-So what do we do? We highly encourage organizations to only capture the data that they need to help reduce costs as well as optimize around analytics that need to be done. The less data that needs to be processed, the less compute that is needed, which means less cost. So, do you really need the audit logs?
+So what do we do? We highly encourage organizations to only capture the data that they need to help reduce costs as well as optimize around analytics that need to be done. The fewer data that needs to be processed, the less compute that is needed, which means less cost. So, do you really need the audit logs?
 
 Ok, you get it, or you don't buy into selectively capturing data. Your organization needs to capture all the data because you don't know what you don't know.
 
@@ -59,66 +94,12 @@ So how do I capture those Kubernetes audit logs and where should they be put? Di
 
 - Click [Enable Kubernetes Logs](https://docs.microsoft.com/en-us/azure/aks/view-master-logs) for more details and direct **kube-audit** logs to an Azure Storage Account, **NOT Log Analytics**.
 
-
-## Find Public IP of AKS api-server Endpoint
-
-This section shows how to find the Public IP (PIP) of the AKS cluster to be able to add it to firewalls for IP whitelisting purposes.
-
-```bash
-# Get API-Server IP
-kubectl get endpoints --namespace default kubernetes
-```
-
-## Find Public IP of Azure Application Gateway used for WAF
-
-This setion shows how to find the Public IP Address of the Azure Application Gateway which is used as a WAF, and the Ingress point for workloads into the Cluster.
-
-```bash
-# Retrieve the Public IP Address of the App Gateway.
-az network public-ip show -g $RG -n $AGPUBLICIP_NAME --query "ipAddress" -o tsv
-```
-
-## OPA and Gatekeeper Policy Setup
-
-In this section we will set up the AKS specific policies we want to enforce. To recap, for our given scenario that means:
-
-- Registry Whitelisting
-
-Azure Policy used OPAv3 to enforce the Pod Security Policy, and it also provides out of the box policies that can secure the AKS cluster. We will use "Ensure only allowed container images in Kubernetes Cluster" to whitelist the registry that contains "kevingbb"
-
-![Assign Policy](img/opa_1.png)
-![Policy Parameters](img/opa_2.png)
-
-```bash
-# Look at Created Resources
-# Check Resources
-kubectl get crd | grep gatekeeper
-kubectl get constrainttemplate,config -n gatekeeper-system
-
-# Test out Allowed Registry Policy Against production Namespace
-kubectl run centosprod --image=centos -it --rm -n production
-
-# Try again with Image from kevingbb
-kubectl run bobblehead --image=kevingbb/khbobble -n production
-
-# What did you notice with the last command? The main image got pulled, but the sidecar images did not :).
-
-# Try again in default Namespace
-kubectl run centosdefault --image=centos -it --rm -n default
-
-# Test out Connectivity
-curl 100.64.2.4
-# Exit out of Pod
-exit
-```
-
 ## Next Steps
 
 [Deploy App](/deploy-app/README.md)
 
 ## Key Links
 
-- [Enable Kubernetes Logs](https://docs.microsoft.com/en-us/azure/aks/view-master-logs)
-- [Patch Management with Kured](https://docs.microsoft.com/en-us/azure/aks/node-updates-kured)
+- [Enable Kubernetes Logs](https://learn.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-log-query#resource-logs)
 - [Azure Traffic Analytics](https://docs.microsoft.com/en-us/azure/network-watcher/traffic-analytics)
 

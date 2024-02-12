@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="WEB_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/cluster-provisioning/terraform/.terraform" />
+      <excludeFolder url="file://$MODULE_DIR$/cluster-provisioning/terraform/appgw/.terraform" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+  <component name="SonarLintModuleSettings">
+    <option name="uniqueId" value="e00562e6-a60c-4ccb-8ab7-1b9c6b9a1999" />
+  </component>
+</module>

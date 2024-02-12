@@ -2,63 +2,61 @@
 
 Cost Governance is the continuous process of implementing policies to control costs. In the context of Kubernetes, there are a number of ways organizations can control and optimize their costs. These include native Kubernetes tooling to manage and govern resource usage and consumption as well as proactive monitoring and optimize the underlying infrastructure.
 
-In this section, we will use [KubeCost monitor](https://kubecost.com/) and govern our AKS cluster cost. Cost allocation can be scoped to a deployment, service, label, pod, and namespace, which will give you flexibility in how you chargeback/showback users of the cluster.
+Previously, you might have used third-party solutions, like Kubecost or OpenCost, to gather and analyze resource consumption and costs by Kubernetes-specific levels of granularity, such as by namespace or pod. In 2023, AKS has integrated with Microsoft Cost Management (MCM) to offer detailed cost drill down scoped to Kubernetes constructs, such as cluster and namespace, in addition to Azure Compute, Network, and Storage categories.
+
+The AKS cost analysis addon is built on top of OpenCost, an open-source Cloud Native Computing Foundation Sandbox project for usage data collection, which gets reconciled with your Azure invoice data. Post-processed data is visible directly in the MCM Cost Analysis portal experience.
+
+**NOTE**: AKS cost analysis addon is only available for Standard and Premium Tier, not Free Tier.  
 
 ## Setup
 
-We will first need to get KubeCost deployed to our cluster. We have the choice to install directly or using the Helm charts as documented [here](https://kubecost.com/install?ref=home).
-
-### Install directly
+This should be already done in Day 1, so you might just skip it. 
 
 ```bash
-# Create Kubecost Namespace
-kubectl create namespace kubecost
-# Install KubeCost into AKS Cluster
-kubectl apply -f https://raw.githubusercontent.com/kubecost/cost-analyzer-helm-chart/master/kubecost.yaml --namespace kubecost
+az feature register --namespace "Microsoft.ContainerService" --name "ClusterCostAnalysis"
+az feature show --namespace "Microsoft.ContainerService" --name "ClusterCostAnalysis"
+az provider register --namespace Microsoft.ContainerService
+az aks update --name ${PREFIX}-aks --resource-group ${PREFIX}-rg --enable-cost-analysis
 ```
 
-### Install with Helm
+Check if the add-on pods are running. 
 
 ```bash
-## Helm 3
-kubectl create namespace kubecost
-helm repo add kubecost https://kubecost.github.io/cost-analyzer/
-helm install kubecost kubecost/cost-analyzer --namespace kubecost --set kubecostToken="YWxnaWJib25AbWljcm9zb2Z0LmNvbQ==xm343yadf98" --set persistentVolume.size=1G
+kubectl get pods -n kube-system -l app=cost-analysis-agent
+NAME                                  READY   STATUS    RESTARTS   AGE
+cost-analysis-agent-d445b4c48-j6xjv   3/3     Running   0          4m13s
 ```
 
-### Check your deployment
+## View Kubernetes costs
 
-```bash
-# After a few minutes check to see that everything is up and running
-kubectl get pods -n kubecost
-# Connect to the KubeCost Dashboard (UI)
-kubectl port-forward -n kubecost svc/kubecost-cost-analyzer 9090:9090
-```
+Microsoft Cost management provides the following views to analyze your Kubernetes costs. 
 
-You now can open your browser and point to <http://127.0.0.1:9090> to open the Kubecost UI. In the Kubecost UI you should see a screen like below, so go ahead and select your cluster to view cost allocation information.
+. Kubernetes clusters – Shows aggregated costs of clusters in a subscription.
+. Kubernetes namespaces – Shows aggregated costs of namespaces for all clusters in a subscription.
+. Kubernetes assets – Shows costs of assets running within a cluster.
 
-## Navigating KubeCost
+To view AKS costs from the Cost Management page, go to Cost analysis page and select a view under Kubernetes views (preview).
+![Cost Analysis Page](img/kubernetes-views.png)
 
-KubeCost will break down resources into the following categories:
+### Kubernetes clusters view
 
-- Monthly Cluster Cost
-- Namespace Cost
-- Deployment Resource Cost
-- Cost Efficiency
+The Kubernetes clusters view shows the costs of all clusters in a subscription. With this view, you can drill down into namespaces or assets for a cluster. Select the ellipsis ( … ) to see the other views.
 
-You'll see a dashboard like the one below when selecting your cluster
+![Kubernetes clusters view](img/kubernetes-clusters-view.png)
 
-![kubecost-admin](img/cost-admin.png)
+### Kubernetes namespaces view
 
-If you select **Allocation** on the left side you can dig down into the namespace cost of your resources. It will show the cost for CPU, Memory, Persistent Volumes, and Network. It gets the data from Azure pricing, but you can also set a custom cost of the resources.
+The Kubernetes namespaces view shows the costs of namespaces for the cluster along with Idle and System charges. Service charges, which represent the charges for Uptime SLA, are also shown.
 
-![kubecost-allocation](img/allocation.png)
+![Kubernetes namespaces view](img/kubernetes-namespaces-view.png)
 
-Now if you select **Savings** on the left side you can dig down into cost-saving for underutilized resources. It will give you info back on underutilized nodes, pods, and abandoned resources. It will also identify resource requests that have been overprovisioned within the cluster. You can see a sample below of the overview:
+### Kubernetes assets view
 
-![kubecost-savings](img/savings.png)
+The Kubernetes assets view shows the costs of assets in a cluster categorized under one of the service categories: Compute, Networking, and Storage. The uptime SLA charges are under the Service category.
 
-Take some time to navigate around the different views and features KubeCost provides.
+![Kubernetes assets view](img/kubernetes-assets-view.png)
+
+Take some time to navigate around the different views and features provided by AKS Cost Analysis add-on.
 
 ## Next Steps
 
@@ -66,4 +64,4 @@ Take some time to navigate around the different views and features KubeCost prov
 
 ## Key Links
 
-- [KubeCost](https://kubecost.com/)
+- [View Kubernetes costs (Preview)](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/view-kubernetes-costs)

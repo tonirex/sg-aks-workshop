@@ -2,9 +2,7 @@
 
 This section walks us through some of the different thoughts/questions/topics that come up when it comes to designing solutions around AKS clusters.
 
-## Tenancy
-
-Coming Soon.
+Baseline architecture for an Azure Kubernetes Service (AKS) cluster[https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/containers/aks/baseline-aks]
 
 ## Number of Clusters/Environments
 

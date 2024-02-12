@@ -2,7 +2,7 @@
 
 This lab walks you through provisioning a secure AKS cluster utilizing Terraform.  You may ask "Why not utilize Azure Resource Manager Templates?"... The reason we have utilized Terraform is that it gives a multi-platform provisioning tool, that also lets us automate the provisioning of non-Azure resources, so we'll have a full production cluster setup from a single provisioning tool.
 
-Lets first create a fork of the sg-aks-workshop repo in our own Github account.
+Let's first create a fork of the sg-aks-workshop repo in our own GitHub account.
 
 ![Fork](./img/fork.png)
 
@@ -15,7 +15,7 @@ git clone https://github.com/<user_name>/sg-aks-workshop
 Now change directories to the cluster-provisioning/terraform directory.
 
 ```bash
-cd sg-aks-workshop/cluster-provisioning/aks/terraform
+cd sg-aks-workshop/cluster-provisioning/terraform/aks/
 ```
 
 We will also need to set up all our variables from the last lab, so we can utilize the networking infrastructure that was set up.
@@ -84,7 +84,7 @@ terraform apply
 
 **_This will take approximately 5-10 minutes to fully provision all of our resources_**
 
-In the next section, we will talk about our approach to automating the setup, that is typically done in a post-install setup. We utilize Flux, which will automatically sync our Kubernetes manifest from a Github repo.
+In the next section, we will talk about our approach to automating the setup, that is typically done in a post-install setup. We utilize Flux, which will automatically sync our Kubernetes manifest from a GitHub repo.
 
 ## Enable Ingress Controller and App Gateway
 
@@ -126,7 +126,7 @@ nginx-internal-0   LoadBalancer   192.168.185.35   100.64.2.4      80:31229/TCP,
 We will again use Terraform to create an Application Gateway and configure it to use the internal IP address of the ingress controller. 
 
 ```bash
-cd sg-aks-workshop/cluster-provisioning/appgw/terraform
+cd sg-aks-workshop/cluster-provisioning/terraform/appgw
 ```
 
 In "aag.tf" file, there are ip addresses that should be changed to the internal IP address of the ingress controller, backend_address_pool and probe. 
@@ -137,12 +137,14 @@ terraform plan
 terraform apply
 ```
 
-
 ---
 **NOTE**
-If you face this issue regarding NSG, you can create a new NSG rule to allow traffic from the Application Gateway to the AKS cluster. 
+If you face the issue regarding NSG, create a new rule to allow traffic to the Application Gateway. 
 
+```bash
 Error: creating Application Gateway: (Name "sg-appgateway" / Resource Group "jayaksworkshop-rg"): network.ApplicationGatewaysClient#CreateOrUpdate: Failure sending request: StatusCode=400 -- Original Error: Code="ApplicationGatewaySubnetInboundTrafficBlockedByNetworkSecurityGroup" Message="Network security group /subscriptions/6535fca9-4fa4-43ee-9320-b2f34de09589/resourceGroups/jayaksworkshop-rg/providers/Microsoft.Network/networkSecurityGroups/jayaksworkshop-vnet-jayaksworkshop-appgwsubnet-nsg-southeastasia blocks incoming internet traffic on ports 65200 - 65535 to subnet /subscriptions/6535fca9-4fa4-43ee-9320-b2f34de09589/resourceGroups/jayaksworkshop-rg/providers/Microsoft.Network/virtualNetworks/jayaksworkshop-vnet/subnets/jayaksworkshop-appgwsubnet, associated with Application Gateway /subscriptions/6535fca9-4fa4-43ee-9320-b2f34de09589/resourceGroups/jayaksworkshop-rg/providers/Microsoft.Network/applicationGateways/sg-appgateway. This is not permitted for Application Gateways that have V2 Sku." Details=[]
+```
+This is an example of the command to create a new rule to allow traffic to the Application Gateway. 
 
 ```bash
 az network nsg rule create -g jayaksworkshop-rg --nsg-name jayaksworkshop-vnet-jayaksworkshop-appgwsubnet-nsg-southeastasia -n GatewayManager --priority 4096 --source-port-range '*' --access allow --destination-port-ranges 65200-65535 --source-address-prefixes GatewayManager --protocol Tcp
@@ -158,27 +160,37 @@ One of the most important aspects of managing a Kubernetes cluster is the abilit
 
 Pull Requests enabled on the config repo are independent of the cluster itself and can be reviewed by developers. This leaves a complete audit trail of every tag update and config change, regardless of whether it was made manually or automatically. Although using git as part of your CI/CD pipeline adds another layer of defense, it also means that the security onus is shifted to git itself.
 
-Flux was one of the first tools to enable the GitOps approach and it’s the
+Flux was one of the first tools to enable the GitOps approach, and it’s the
 tool we will use due to its maturity and level of adoption. Below is a diagram that describes how the approach works.
 
 ![GitOps Diagram](./img/gitops.png "GitOps Diagram")
 
+[Tutorial: Deploy applications using GitOps with Flux v2](https://learn.microsoft.com/en-us/azure/azure-arc/kubernetes/tutorial-use-gitops-flux2?tabs=azure-cli) has a great tutorial on how to use GitOps with Flux v2. And here is the simple guide to get you started.
 
-You'll notice once your cluster is provisioned you'll also have the following deployed:
+```bash
+## Regsiter the following Azure resource providers
+az provider register --namespace Microsoft.Kubernetes
+az provider register --namespace Microsoft.ContainerService
+az provider register --namespace Microsoft.KubernetesConfiguration
 
-- **Namespaces** - Allows logical isolation of resources and provides the ability to set RBAC, Quota, Network Policies between namespaces.
-  
-- **RBAC Policies** - The RBAC policies are set to give pre-defined active directory groups restricted permissions to the deployed cluster. This allows different permissions to specific namespaces.
+## Enable CLI Extension
+az extension add -n k8s-configuration
+az extension add -n k8s-extension
+
+## Create a Flux configuration - Change the values to match your environment
+
+az k8s-configuration flux create -g $PREFIX-rg -c $PREFIX-aks -n cluster-config --namespace default -t managedClusters --scope cluster -u https://github.com/{github_account}/sg-aks-workshop --branch master --kustomization name=infra path=./cluster-config prune=true --interval 1m
+```
+
+You'll notice once your flux configuration is provisioned, you'll have the following deployed:
+
+- **Namespaces** - Three namespaces will be created, `dev`, `staging`, and `production`. These namespaces will be used to deploy your applications to the cluster.
 
 - **Network Policy Rules** - The network policies will restrict communication between different teams' namespace, to limit the exposure of access between namespaces.
 
+- **LimitRanges** - LimitRanges will allow you to set resource consumption governance per namespaces to limit the amount of resources a team or user can deploy to a cluster.
+- 
 - **Quotas** - Quotas will allow you to set resource consumption governance on a namespace to limit the amount of resources a team or user can deploy to a cluster. It gives you a way to logically carve out resources of a single cluster.
-
-
-
-
-
-
 
 The below diagram shows our production cluster
 
@@ -186,7 +198,7 @@ The below diagram shows our production cluster
 
 ## Next Steps
 
-[Post Provisioning](/post-provisioning/README.md)
+[Post Provisioning](/cluster-post-provisioning/README.md)
 
 ## Key Links
 
