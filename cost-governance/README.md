@@ -60,7 +60,7 @@ Take some time to navigate around the different views and features provided by A
 
 ## Next Steps
 
-[Deploy Application](/deploy-app/README.md)
+[Cluster Monitoring](/cluster-monitoring/README.md)
 
 ## Key Links
 

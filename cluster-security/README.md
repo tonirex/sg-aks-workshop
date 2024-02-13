@@ -191,7 +191,7 @@ One of the most important things an organization can do when adopting Containers
 
 ## Next Steps
 
-[Deploy App](/deploy-app/README.md)
+[Cost Governance](/cost-governance/README.md)
 
 ## Key Links
 

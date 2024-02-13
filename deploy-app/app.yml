@@ -1,0 +1,119 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: acme-catalog
+spec:
+  selector:
+    app: acme-catalog
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: acme-catalog
+  labels:
+    app: acme-catalog
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: acme-catalog
+  template:
+    metadata:
+      name: acme-catalog
+      labels:
+        app: acme-catalog
+    spec:
+      containers:
+        - name: acme-catalog
+          image: jayaksworkshopacr.azurecr.io/acme-catalog:1.0.0
+          imagePullPolicy: Always
+          env:
+            - name: POSTGRES-SERVER-NAME
+              value: postgres
+            - name: CATALOG-DATABASE-NAME
+              value: catalog
+            - name: POSTGRES-LOGIN-NAME
+              value: postgres
+            - name: POSTGRES-LOGIN-PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: acme-frontend
+  namespace: dev
+spec:
+  selector:
+    app: acme-frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: acme-frontend
+  namespace: dev
+  labels:
+    app: acme-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: acme-frontend
+  template:
+    metadata:
+      name: acme-frontend
+      labels:
+        app: acme-frontend
+    spec:
+      containers:
+        - name: acme-frontend
+          image: jayaksworkshopacr.azurecr.io/acme-frontend:1.0.0
+          imagePullPolicy: Always
+      restartPolicy: Always
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: acme-frontend
+  namespace: dev
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: nginx-internal
+  rules:
+    - http:
+        paths:
+          - backend:
+              service:
+                name: acme-frontend
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix
+          - path: /products
+            pathType: Prefix
+            backend:
+              service:
+                name: acme-catalog
+                port:
+                  number: 80
+          - path: /static
+            pathType: Prefix
+            backend:
+              service:
+                name: acme-catalog
+                port:
+                  number: 80

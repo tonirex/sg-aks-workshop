@@ -1,18 +1,16 @@
 # Deploy App
 
-This section walks us through deploying the sample application on AKS. While deploying an app, 
+Since AKS cluster is ready, we will deploy a sample application to the AKS cluster to test the functionality of the cluster. 
 
-## Web and Worker Image Classification Services
+## Sample App - ACME Fitness Shop
 
-This is a simple SignalR application with two parts. The web front-end is a .NET Core MVC application that serves up a single page that receives messages from the SignalR Hub and displays the results. The back-end worker application retrieves data from Azure Files and processes the image using a TensorFlow model and sends the results to the SignalR Hub on the front-end.
-
-The end result on the front-end should display what type of fruit image was processed by the Tensorflow model. And because it is SignalR there is no browser refreshing needed.
+ACME Fitness store is a fictional online retailer selling sporting goods. Full application is composed of 7 microservices, but for the purpose of this lab, we will deploy only 2 services, the frontend and the catalog service. The frontend service is a web application that serves the user interface and the catalog service is a backend service that provides the product catalog. Frontend is written in Node.js and the catalog service is written in Java.
 
 ## Container Development
 
-Before we get into setting up the application, let's have a quick discussion on what container development looks like for the customer. No development environment is the same as it is not a one size fits all when it comes to doing development. Computers, OS, languages, and IDEs to name a few things are hardly ever the same configuration/setup. And if you throw the developer themselves in that mix it is definitely not the same.
+Before we get into setting up the application, let's have a quick discussion on what container development looks like for the customer. No development environment is the same as it is not one size fits all when it comes to doing development. Computers, OS, languages, and IDEs to name a few things are hardly ever the same configuration/setup. And if you throw the developer themselves in that mix it is definitely not the same.
 
-As a result, different users work in different ways. The following are just a few of the **inner DevOps loop** tools that we are seeing in this eco-system, feel free to try any of them out and let us know what you think. And if it hits the mark.
+As a result, different users work in different ways. The following are just a few of the **inner DevOps loop** tools that we are seeing in this ecosystem, feel free to try any of them out and let us know what you think. And if it hits the mark.
 
 ### Tilt
 
@@ -22,7 +20,7 @@ Click [here](https://github.com/windmilleng/tilt) for more details and to try it
 
 ### Telepresence
 
-Telepresence is an open-source tool that lets you run a single service locally, while connecting that service to a remote Kubernetes cluster. This lets developers working on multi-service applications to:
+Telepresence is an open-source tool that lets you run a single service locally, while connecting that service to a remote Kubernetes cluster. This lets developers working on microservices to:
 
 1. Do fast local development of a single service, even if that service depends on other services in your cluster. Make a change to your service, save, and you can immediately see the new service in action.
 2. Use any tool installed locally to test/debug/edit your service. For example, you can use a debugger or IDE!
@@ -36,211 +34,112 @@ This section grabs the container images from Docker Hub and then pushes them to 
 
 ```bash
 # Pull Images from Docker Hub to Local Workstation
-docker pull kevingbb/imageclassifierweb:v1
-docker pull kevingbb/imageclassifierworker:v1
+docker pull eggboy/acme-frontend:1.0.0
+docker pull eggboy/acme-catalog:1.0.0
 
 # Authenticate to ACR
 az acr list -o table
 az acr login -n ${PREFIX}acr
 
 # Push Images to ACR
-docker tag kevingbb/imageclassifierweb:v1 ${PREFIX}acr.azurecr.io/imageclassifierweb:v1
-docker tag kevingbb/imageclassifierworker:v1 ${PREFIX}acr.azurecr.io/imageclassifierworker:v1
-docker push ${PREFIX}acr.azurecr.io/imageclassifierweb:v1
-docker push ${PREFIX}acr.azurecr.io/imageclassifierworker:v1
+docker tag eggboy/acme-frontend:1.0.0 ${PREFIX}acr.azurecr.io/acme-frontend:1.0.0
+docker tag eggboy/acme-catalog:1.0.0 ${PREFIX}acr.azurecr.io/acme-catalog:1.0.0
+docker push ${PREFIX}acr.azurecr.io/acme-frontend:1.0.0
+docker push ${PREFIX}acr.azurecr.io/acme-catalog:1.0.0
 ```
 
 ## Deploy Application
 
-There is an app.yaml file in this directory so either change into this directory or copy the contents of the file to a filename of your choice. Once you have completed the previous step, apply the manifest file and you will get the web and worker services deployed into the **dev** namespace.
+There is an app.yaml file in this directory so either change into this directory or copy the contents of the file to a filename of your choice. Once you have completed the previous step, apply the manifest file, and you will get the web and worker services deployed into the **dev** namespace.
+
+**NOTE**: Before you apply the manifest file, make sure to update the `app.yml` file with the correct ACR name.
 
 ```bash
+# Deploy the Postgres Database
+kubectl apply -f postgres.yml
+
 # Deploy the Application Resources
-kubectl apply -f app.yaml
+kubectl apply -f app.yml
+
 # Display the Application Resources
 kubectl get deploy,rs,po,svc,ingress -n dev
 ```
-
-### File Share Setup
-
-You will notice that some of the pods are not starting up, this is because an Azure File Share is missing and the secret to access Azure Files.
-
-Create an Azure Storage account in your resource group.
-
-```bash
-# declare the share referenced above.
-SHARE_NAME=fruit
-
-# az storage creation for app.
-STORAGE_ACCOUNT=${PREFIX}storage
-
-# create storage account
-az storage account create -g $RG -n $STORAGE_ACCOUNT
-
-# create an azure files share to contain fruit images
-az storage share create --name $SHARE_NAME --account-name $STORAGE_ACCOUNT
-
-# get the key
-STORAGE_KEY=$(az storage account keys list -g $RG -n $STORAGE_ACCOUNT --query "[0].value" | tr -d '"')
-
-# create a secret
-kubectl create secret generic fruit-secret \
-  --from-literal=azurestorageaccountname=$STORAGE_ACCOUNT \
-  --from-literal=azurestorageaccountkey=$STORAGE_KEY \
-  -n dev
-```
-
-From the Azure portal upload all the contents of the ./deploy-app/fruit/ directory.
-![Upload fruit directory](/deploy-app/img/upload_images.png)
-
-```bash
-# Check to see Worker Pod is now Running
-kubectl get deploy,rs,po,svc,ingress,secrets -n dev
-```
-
-The end result will look something like this.
-
-![Dev Namespace Output](/deploy-app/img/app_dev_namespace.png)
-
-## Test out Application Endpoint
-
-This section will show you how to test and see if the application endpoint is up and running.
-
-```bash
-# Exec into Pod and Test Endpoint
-kubectl run -i --tty ubuntu --image=ubuntu:22.04 --restart=Never -- /bin/bash
-apt update
-apt install curl
-# Inside of the Pod test the Ingress Controller Endpoint (Tensorflow in the page Title)
-curl -sSk 100.64.2.4 | grep -i 'TensorFlow'
-# You should have seen the contents of an HTML file dumped out. If not, you will need to troubleshoot.
-# Exit out of Pod
-exit
-```
-
-- Now Test with the WAF Ingress Point
+- Test with the Application Gateway Public IP
 
 ```bash
 az network public-ip show -g $RG -n $AGPUBLICIP_NAME --query "ipAddress" -o tsv
 ```
+Open the browser and head to the IP address of the Application Gateway to see the application running.
+
+![Sample Application](img/frontend.png)
 
 ## Adding in Secrets Mgmt
 
-This section will take a look at the same application, but add in some more capabilities and storing the sensitive information to turn on those capabilities securely.
+In the previous section, we deployed the frontend(acme-frontend) and backend(acme-catalog) services to the AKS cluster. The backend service is using Postgres as a backend database which we deployed earlier. If you open the `app.yml` file, you will see that we are supplying Postgres connection details as environment variables as POSTGRES-SERVER-NAME, CATALOG-DATABASE-NAME, POSTGRES-LOGIN-NAME, and POSTGRES-LOGIN-PASSWORD. This is not a good practice as we are exposing the database connection details in the manifest file. We will now move these secrets to Azure Key Vault and use them in the application.
 
-Here is a small list of things that will be added:
+Here is a list of steps in a nutshell:
 
-- Health Checks via Liveness and Readiness Probes.
-- Application Instrumentation with Instrumentation Key securely stored in Azure Key Vault (AKV).
-- Add a Title to the App with that Title stored in AKV for illustration purposes only.
-
-When dealing with secrets we typically need to store some type of bootstrapping credential(s) or connection string to be able to access the secure store.
-
-**What if there was another way?**
-
-There is, it is called AAD Pod Identity, or Managed Pod Identity. We are going to assign an Azure Active Directory Identity to a running Pod which will automatically grab an Azure AD backed Token which we can then use to securely access Azure Key Vault.
-
-**Pretty Cool!**
+- Move DB Connection information from environment variable to Azure Key Vault (AKV).
+- Configure Managed Identity to access Key Vault without any credentials
+- Configure Microsoft Entra Workload ID with AKS.
 
 ### Create Azure Key Vault (AKV) & Secrets
 
-- In this section we will create the secrets backing store which will be Azure Key Vault and populate it with the secrets information.
+- In this section, we will create the secrets backing store which will be Azure Key Vault and populate it with the secrets information.
 
 ```bash
 # Create Azure Key Vault Instance
-az keyvault create -g $RG -n ${PREFIX}akv -l $LOC --enabled-for-template-deployment true
-# Retrieve Application Insights Instrumentation Key
-az resource show \
-    --resource-group $RG \
-    --resource-type "Microsoft.Insights/components" \
-    --name ${PREFIX}-ai \
-    --query "properties.InstrumentationKey" -o tsv
-INSTRUMENTATION_KEY=$(az resource show -g $RG --resource-type "Microsoft.Insights/components" --name ${PREFIX}-ai --query "properties.InstrumentationKey" -o tsv)
+az keyvault create -g $RG -n ${PREFIX}-akv -l $LOCATION --enabled-for-template-deployment true
 # Populate AKV Secrets
-az keyvault secret set --vault-name ${PREFIX}akv --name "AppSecret" --value "MySecret"
-az keyvault secret show --name "AppSecret" --vault-name ${PREFIX}akv
-az keyvault secret set --vault-name ${PREFIX}akv --name "AppInsightsInstrumentationKey" --value $INSTRUMENTATION_KEY
-az keyvault secret show --name "AppInsightsInstrumentationKey" --vault-name ${PREFIX}akv
+az keyvault secret set --vault-name ${PREFIX}-akv --name "POSTGRES-SERVER-NAME" --value postgres
+az keyvault secret set --vault-name ${PREFIX}-akv --name "CATALOG-DATABASE-NAME" --value catalog
+az keyvault secret set --vault-name ${PREFIX}-akv --name "POSTGRES-LOGIN-NAME" --value postgres
+az keyvault secret set --vault-name ${PREFIX}-akv --name "POSTGRES-LOGIN-PASSWORD" --value catalog_user
+
 ```
 
-### Create Azure AD Identity
+### Configure AKS Workload identity with Entra ID Managed Identity
 
-- Now that we have AKV and the secrets setup, we need to create the Azure AD Identity and permissions to AKV.
+AKS Workload Identity requires the initial setup of enabling workload identity and OIDC Issuer for the AKS cluster, however these are all done as part of the AKS Terraform deployment in Day 1. so we will skip that part and move to the next step. Next step is to create the Azure Entra ID Managed Identity and permissions to AKV.
 
 ```bash
-# Enable AAD Pod Identity
-az aks update -g $RG -n $PREFIX-aks --enable-pod-identity
+# Configure workload identity
+az identity create --name "mi_for_keyvault" --resource-group $RG
 
-# Create Azure AD Identity
-export AAD_IDENTITY=${PREFIX}identity
-az identity create -g $RG -n $AAD_IDENTITY -o json
-# Sample Output
-{
-  "clientId": "CLIENTID",
-  "clientSecretUrl": "https://control-eastus.identity.azure.net/subscriptions/SUBSCRIPTION_ID/resourcegroups/contosofin-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/contosofinidentity/credentials?tid=TID&aid=AID",
-  "id": "/subscriptions/SUBSCRIPTION_ID/resourcegroups/contosofin-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/contosofinidentity",
-  "location": "eastus",
-  "name": "jayaiaidentity",
-  "principalId": "PRINCIPALID",
-  "resourceGroup": "jayaia-rg",
-  "tags": {},
-  "tenantId": "TENANT_ID",
-  "type": "Microsoft.ManagedIdentity/userAssignedIdentities"
-}
-# Grab PrincipalID & ClientID & TenantID from Above
-export AAD_IDENTITY_PRINCIPALID=$(az identity show -g $RG -n $AAD_IDENTITY --query "principalId" -o tsv)
+# Make a note of this Client ID as it will be used in the next step
+az identity show -g $RG --name "mi_for_keyvault" --query 'clientId' -o tsv
+
+# Get the AKS cluster OIDC Issuer URL using the az aks show command.
+az aks show --resource-group $RG --name $PREFIX-aks --query "oidcIssuerProfile.issuerUrl" -o tsv
+
+# Establish a federated identity credential between the Microsoft Entra application, service account issuer, and subject.
+# Open the identity-sa.yml file and replace the annotations with the Client Id from the previous step.
+kubectl apply -f identity-sa.yml
+
+# Create the federated identity credential between the managed identity, service account issuer, and subject 
+export FEDERATED_IDENTITY_NAME="aksfederatedidentity" # can be changed as needed
+
+az identity federated-credential create --name aksfederatedidentity --identity-name "mi_for_keyvault" --resource-group $RG --issuer $(az aks show --resource-group $RG --name $PREFIX-aks --query "oidcIssuerProfile.issuerUrl" -o tsv) --subject system:serviceaccount:dev:workload-identity-sa
+
 ```
 
-- Now that we have the Azure AD Identity setup, the next step is to set up the access policy (RBAC) in AKV to allow or deny certain permissions to the data.
+### Key Vault Access Policy and Workload Identity setup for Pod
 
-```bash
-# Setup Access Policy (Permissions) in AKV
-az keyvault set-policy \
-    --name ${PREFIX}akv \
-    --secret-permissions list get \
-    --object-id $AAD_IDENTITY_PRINCIPALID
-```
+Managed Identity we created before is not given any permissions to access the Key Vault. We will now give the Managed Identity access to the Key Vault. Go to Azure portal and navigate to the Key Vault and add the Managed Identity to the Access Policy.
 
-### Create Azure AD Identity Resources in AKS
+![Sample Application](img/access-1.png)
+![Sample Application](img/access-2.png)
 
-- Now that we have all the Azure AD Identity and AKS Cluster SP permissions setup. The next step is to setup and configure the AAD Pod Identities in AKS.
+Once the Managed Identity has been given access to the Key Vault, we will now update the application manifest file to use the secrets from the Key Vault. You can see the updated manifest file [here](catalog-kv.yml). We will delete the existing deployment and apply the new manifest file.
 
 ```bash
 
-export AAD_IDENTITY_RESOURCE_ID="$(az identity show -g ${RG} -n ${IDENTITY_NAME} --query id -otsv)"
+kubectl delete deploy acme-catalog -n dev
+kubectl apply -f catalog-kv.yml
 
-az aks pod-identity add --resource-group ${RG} --cluster-name ${PREFIX}-aks --namespace dev --name akv-identity --identity-resource-id ${AAD_IDENTITY_RESOURCE_ID}
-
-# Take a look at AAD Resources
-kubectl get azureidentity,azureidentitybinding -n dev
 ```
 
-### Deploy Updated Version of Application which accesses AKV
-
-- Now that the bindings are set up, we are ready to test it out by deploying our application and see if it is able to read everything it needs from AKV.
-
-**NOTE: It is the following label, configured via above, that determines whether or not the Identity Controller tries to assign an AzureIdentity to a specific Pod.**
-
-metadata:
-labels:
-**aadpodidbinding: akv-identity**
-name: my-pod
-
-```bash
-# Remove Existing Application
-kubectl delete -f app.yaml
-
-# Create Secret for Name of Azure Key Vault for App Bootstrapping
-kubectl create secret generic image-akv-secret \
-  --from-literal=KeyVault__Vault=${PREFIX}akv \
-  -n dev
-
-# Deploy v3 of the Application
-kubectl apply -f appv3msi.yaml
-
-# Display the Application Resources
-kubectl get deploy,rs,po,svc,ingress,secrets -n dev
-```
+Open the catalog-kv.yml file and see how we are using the secrets from the Key Vault. All the previous environment variables are removed, and Key Vault related environment variables are added. With Managed Identity, we don't use any credentials to access the Key Vault, so we can safely access the secrets from the Key Vault.
 
 - Once the pods are up and running, check via the WAF Ingress Point
 
@@ -251,10 +150,9 @@ az network public-ip show -g $RG -n $AGPUBLICIP_NAME --query "ipAddress" -o tsv
 
 ## Next Steps
 
-[Cost Governance](/cost-governance/README.md)
+[Cluster Security](/cluster-security/README.md)
 
 ## Key Links
 
 - [Tilt](https://github.com/windmilleng/tilt)
 - [Telepresence](https://telepresence.io)
-- [Azure Dev Spaces](https://docs.microsoft.com/en-us/azure/dev-spaces/about)

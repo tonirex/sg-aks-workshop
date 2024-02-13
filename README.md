@@ -27,9 +27,8 @@ The end goal is to take you from having a AKS setup that is unsecure by default,
 
   1. [Deploy App](deploy-app/README.md)
   2. [Cluster Security](cluster-security/README.md) 
-  2. [Cost Governance](cost-governance/README.md)
-  3. [Day 2 Operations](day2-operations/README.md)
-  4. [Validate Scenarios](validate-scenarios/README.md)
+  3. [Cost Governance](cost-governance/README.md)
+  4. [Cluster Monitoring](cluster-monitoring/README.md)
 
 ## Prerequisites
 

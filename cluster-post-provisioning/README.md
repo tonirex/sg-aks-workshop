@@ -13,9 +13,6 @@ az provider register --namespace Microsoft.ContainerService
 az aks update --name ${PREFIX}-aks --resource-group ${PREFIX}-rg --enable-cost-analysis
 ```
 
-
-
-
 ## Find Public IP of AKS api-server Endpoint
 
 This section shows how to find the Public IP (PIP) of the AKS cluster to be able to add it to firewalls for IP whitelisting purposes.
@@ -76,9 +73,6 @@ curl www.superman.com
 # Exit out of Pod
 exit
 ```
-
-
-
 
 ## Kubernetes Audit Logs
 

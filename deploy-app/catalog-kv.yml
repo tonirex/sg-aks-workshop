@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: acme-catalog
+  namespace: dev
+  labels:
+    app: acme-catalog
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: acme-catalog
+  template:
+    metadata:
+      name: acme-catalog
+      labels:
+        app: acme-catalog
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: workload-identity-sa
+      containers:
+        - name: acme-catalog
+          image: jayaksworkshopacr.azurecr.io/acme-catalog:1.0.0
+          imagePullPolicy: Always
+          env:
+            - name: KEYVAULT_URI
+              value: https://jayaksworkshop-akv.vault.azure.net
+            - name: MANAGED_IDENTITY_CLIENT_ID
+              value: 72788eff-5163-428c-a9a2-07203471369a
+            - name: SPRING_PROFILES_ACTIVE
+              value: key-vault
+      restartPolicy: Always
