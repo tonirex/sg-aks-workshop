@@ -86,6 +86,15 @@ terraform apply
 
 In the next section, we will talk about our approach to automating the setup, that is typically done in a post-install setup. We utilize Flux, which will automatically sync our Kubernetes manifest from a GitHub repo.
 
+## GitOps and Ingress Controller Preparation
+
+Before we move on to tne next chapter, we need to do two things quickly.
+
+```bash
+kubectl apply -f cert.yml
+kubectl apply -f k8s.yml
+```
+
 ## Enable Ingress Controller and App Gateway
 
 Running Kubernetes in production requires a lot of additional features to be enabled such as Ingress Controllers, Service Meshes, Image Eraser, etc. AKS as a managed Kubernetes service from Azure provides a lot of these features out of the box under the name of add-ons. One of the add-ons is Web Application Routing, which is a Kubernetes ingress controller that is based on nginx ingress controller. This add-on is useful for managing traffic to your applications, providing SSL termination, and other L7 features.
@@ -149,8 +158,6 @@ This is an example of the command to create a new rule to allow traffic to the A
 ```bash
 az network nsg rule create -g jayaksworkshop-rg --nsg-name jayaksworkshop-vnet-jayaksworkshop-appgwsubnet-nsg-southeastasia -n GatewayManager --priority 4096 --source-port-range '*' --access allow --destination-port-ranges 65200-65535 --source-address-prefixes GatewayManager --protocol Tcp
 ```
----
-
 
 ## GitOps Approach To Managing Clusters
 
@@ -165,7 +172,10 @@ tool we will use due to its maturity and level of adoption. Below is a diagram t
 
 ![GitOps Diagram](./img/gitops.png "GitOps Diagram")
 
+
 [Tutorial: Deploy applications using GitOps with Flux v2](https://learn.microsoft.com/en-us/azure/azure-arc/kubernetes/tutorial-use-gitops-flux2?tabs=azure-cli) has a great tutorial on how to use GitOps with Flux v2. And here is the simple guide to get you started.
+
+**CHALLENGE** - GitOps requres the F/W rule to allow the traffic to '$LOCATION.dp.kubernetesconfiguration.azure.com. Instructor will give you the guidance.
 
 ```bash
 ## Regsiter the following Azure resource providers

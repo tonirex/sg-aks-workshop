@@ -159,7 +159,7 @@ az network firewall application-rule create -g $RG -f $FWNAME \
  -n 'required' \
  --source-addresses '*' \
  --protocols 'http=80' 'https=443' \
- --target-fqdns 'mcr.microsoft.com' '*.data.mcr.microsoft.com' 'management.azure.com' 'login.microsoftonline.com' 'packages.microsoft.com' 'acs-mirror.azureedge.net' 'security.ubuntu.com' 'azure.archive.ubuntu.com' 'changelogs.ubuntu.com' 'vault.azure.net' 'data.policy.core.windows.net' 'store.policy.core.windows.net' 'dc.services.visualstudio.com' '*.blob.core.windows.net' '$LOCATION.dp.kubernetesconfiguration.azure.com' '*github.com' '*quay.io' '*letsencrypt.org' '*gcr.io' '*googleapis.com'
+ --target-fqdns 'mcr.microsoft.com' '*.data.mcr.microsoft.com' 'management.azure.com' 'login.microsoftonline.com' 'packages.microsoft.com' 'acs-mirror.azureedge.net' 'security.ubuntu.com' 'azure.archive.ubuntu.com' 'changelogs.ubuntu.com' 'vault.azure.net' 'data.policy.core.windows.net' 'store.policy.core.windows.net' 'dc.services.visualstudio.com' '*.blob.core.windows.net' '*github.com' '*quay.io' '*letsencrypt.org' '*gcr.io' '*googleapis.com'
 
 # Single F/W Rule
 az network firewall application-rule create -g $RG -f $FWNAME \
