@@ -18,3 +18,11 @@ metadata:
   name: production
   labels:
     app: production
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: production2
+  labels:
+    app: production2
