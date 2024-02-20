@@ -97,6 +97,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
     # Required for advanced networking
     vnet_subnet_id = var.azure_subnet_id
+    temporary_name_for_rotation = "temp"
   }
 
   identity {
