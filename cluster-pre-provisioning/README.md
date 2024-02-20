@@ -126,7 +126,7 @@ echo $FWPUBLIC_IP
 echo $FWPRIVATE_IP
 # Create UDR & Routing Table for Azure Firewall
 az network route-table create -g $RG --name $FWROUTE_TABLE_NAME
-az network route-table route create -g $RG --name $FWROUTE_NAME --route-table-name $FWROUTE_TABLE_NAME --address-prefix 0.0.0.0/0 --next-hop-type VirtualAppliance --next-hop-ip-address $FWPRIVATE_IP --subscription $SUBID
+az network route-table route create -g $RG --name $FWROUTE_NAME --route-table-name $FWROUTE_TABLE_NAME --address-prefix 0.0.0.0/0 --next-hop-type VirtualAppliance --next-hop-ip-address $FWPRIVATE_IP --subscription $SUBSCRIPTION
 
 # Required AKS FW Rules
 # https://docs.microsoft.com/en-us/azure/aks/limit-egress-traffic#required-ports-and-addresses-for-aks-clusters
@@ -142,14 +142,14 @@ az network firewall network-rule create -g $RG -f $FWNAME --collection-name 'aks
 
 az network firewall network-rule create -g $RG -f $FWNAME --collection-name 'aksfwnr' -n 'docker' --protocols 'TCP' --source-addresses '*' --destination-fqdns docker.io registry-1.docker.io production.cloudflare.docker.com --destination-ports '443'
 
-az network firewall network-rule create -g $RG -f $FWNAME --collection-name 'aksfwnr' -n 'gitssh' --protocols 'TCP' --source-addresses '*' --destination-addresses '*' --destination-ports 22 --action allow --priority 300
+az network firewall network-rule create -g $RG -f $FWNAME --collection-name 'aksfwnr' -n 'gitssh' --protocols 'TCP' --source-addresses '*' --destination-addresses '*' --destination-ports 22 --priority 300
 
-az network firewall network-rule create -g $RG -f $FWNAME --collection-name 'aksfwnr' -n 'fileshare' --protocols 'TCP' --source-addresses '*' --destination-addresses '*' --destination-ports 445 --action allow --priority 400
+az network firewall network-rule create -g $RG -f $FWNAME --collection-name 'aksfwnr' -n 'fileshare' --protocols 'TCP' --source-addresses '*' --destination-addresses '*' --destination-ports 445 --priority 400
 
 # Add Application FW Rules
-az network firewall application-rule create -g $RG -f $FWNAME --collection-name 'aksfwar' -n 'fqdn' --source-addresses '*' --protocols 'http=80' 'https=443' --fqdn-tags "AzureKubernetesService" --action allow --priority 100
+az network firewall application-rule create -g $RG -f $FWNAME --collection-name 'aksfwar' -n 'fqdn' --source-addresses '*' --protocols 'http=80' 'https=443' --fqdn-tags "AzureKubernetesService" --priority 100
 
-az network firewall application-rule create -g $RG -f $FWNAME --collection-name 'azmonitor' -n 'fqdn' --source-addresses '*' --protocols 'https=443' --fqdn-tags "AzureMonitor" --action allow --priority 500
+az network firewall application-rule create -g $RG -f $FWNAME --collection-name 'azmonitor' -n 'fqdn' --source-addresses '*' --protocols 'https=443' --fqdn-tags "AzureMonitor" --priority 500
 
 # Single F/W Rule
 az network firewall application-rule create -g $RG -f $FWNAME \
