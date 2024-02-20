@@ -32,7 +32,6 @@ export TF_VAR_azure_aag_name=$AGNAME
 export TF_VAR_azure_aag_public_ip=$(az network public-ip show -g $RG -n $AGPUBLICIP_NAME --query id -o tsv)
 export TF_VAR_azure_vnet_name=$VNET_NAME
 export TF_VAR_github_organization=Azure # PLEASE NOTE: This should be your github username if you forked the repository.
-export TF_VAR_github_token=<use previously created PAT token>
 ```
 
 Now that we have all of our variables stored we can initialize Terraform. 
