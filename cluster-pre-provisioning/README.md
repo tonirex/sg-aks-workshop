@@ -144,12 +144,12 @@ az network firewall network-rule create -g $RG -f $FWNAME --collection-name 'aks
 
 az network firewall network-rule create -g $RG -f $FWNAME --collection-name 'aksfwnr' -n 'gitssh' --protocols 'TCP' --source-addresses '*' --destination-addresses '*' --destination-ports 22 --priority 300
 
-az network firewall network-rule create -g $RG -f $FWNAME --collection-name 'aksfwnr' -n 'fileshare' --protocols 'TCP' --source-addresses '*' --destination-addresses '*' --destination-ports 445 --priority 400
+az network firewall network-rule create -g $RG -f $FWNAME --collection-name 'aksfwnr' -n 'fileshare' --protocols 'TCP' --source-addresses '*' --destination-addresses '*' --destination-ports 445 --priority 400 --action allow
 
 # Add Application FW Rules
-az network firewall application-rule create -g $RG -f $FWNAME --collection-name 'aksfwar' -n 'fqdn' --source-addresses '*' --protocols 'http=80' 'https=443' --fqdn-tags "AzureKubernetesService" --priority 100
+az network firewall application-rule create -g $RG -f $FWNAME --collection-name 'aksfwar' -n 'fqdn' --source-addresses '*' --protocols 'http=80' 'https=443' --fqdn-tags "AzureKubernetesService" --priority 100 --action allow
 
-az network firewall application-rule create -g $RG -f $FWNAME --collection-name 'azmonitor' -n 'fqdn' --source-addresses '*' --protocols 'https=443' --fqdn-tags "AzureMonitor" --priority 500
+az network firewall application-rule create -g $RG -f $FWNAME --collection-name 'azmonitor' -n 'fqdn' --source-addresses '*' --protocols 'https=443' --fqdn-tags "AzureMonitor" --priority 500 --action allow
 
 # Single F/W Rule
 az network firewall application-rule create -g $RG -f $FWNAME \
@@ -168,8 +168,8 @@ az network firewall application-rule create -g $RG -f $FWNAME \
  --priority 300 \
  -n 'required' \
  --source-addresses '*' \
- --protocols https=443' \
- --target-fqdns '$LOCATION.dp.kubernetesconfiguration.azure.com'
+ --protocols 'https=443' \
+ --target-fqdns "$LOCATION.dp.kubernetesconfiguration.azure.com"
  
 # Associate AKS Subnet to FW
 az network vnet subnet update -g $RG --vnet-name $VNET_NAME --name $AKSSUBNET_NAME --route-table $FWROUTE_TABLE_NAME
