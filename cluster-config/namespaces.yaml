@@ -19,17 +19,3 @@ metadata:
   labels:
     app: production
 
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: production2
-  labels:
-    app: production2
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: production3
-  labels:
-    app: production3
