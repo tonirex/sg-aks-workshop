@@ -47,9 +47,6 @@ The following are the requirements to **start**.
 
 - Git | [Git SCM](https://git-scm.com/downloads)
 
-- GitHub Account | [GitHub Account](https://help.github.com/en/github/getting-started-with-github/signing-up-for-a-new-github-account)
-
-  - Required for GitOps Approach to Multi-Cluster Management
 
 - Terraform | [Terraform Download](https://www.terraform.io/downloads.html)
 
