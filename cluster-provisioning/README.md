@@ -31,7 +31,7 @@ export TF_VAR_azure_subnet_name=$APPGWSUBNET_NAME
 export TF_VAR_azure_aag_name=$AGNAME
 export TF_VAR_azure_aag_public_ip=$(az network public-ip show -g $RG -n $AGPUBLICIP_NAME --query id -o tsv)
 export TF_VAR_azure_vnet_name=$VNET_NAME
-export TF_VAR_github_organization=Azure # PLEASE NOTE: This should be your github username if you forked the repository.
+export TF_VAR_github_organization=Azure
 ```
 
 Now that we have all of our variables stored we can initialize Terraform. 
@@ -85,14 +85,6 @@ terraform apply
 
 In the next section, we will talk about our approach to automating the setup, that is typically done in a post-install setup. We utilize Flux, which will automatically sync our Kubernetes manifest from a GitHub repo.
 
-## GitOps and Ingress Controller Preparation
-
-Before we move on to tne next chapter, we need to do two things quickly.
-
-```bash
-kubectl apply -f cert.yml
-kubectl apply -f k8s.yml
-```
 
 ## Enable Ingress Controller and App Gateway
 
@@ -102,7 +94,7 @@ Running Kubernetes in production requires a lot of additional features to be ena
 
 az aks get-credentials --resource-group ${PREFIX}-rg --name ${PREFIX}-aks --admin
 The behavior of this command has been altered by the following extension: aks-preview
-Merged "${PREFIX}-aks-admin" as current context in /Users/jaylee/.kube/config
+Merged "${PREFIX}-aks-admin" as current context in /Users/xxx/.kube/config
 
 az aks approuting enable --resource-group ${PREFIX}-rg --name ${PREFIX}-aks
 
@@ -120,7 +112,7 @@ NAME               TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)      
 nginx              LoadBalancer   192.168.8.160    20.197.69.173   80:30674/TCP,443:31854/TCP,10254:30089/TCP   6m48s
 ``` 
 
-We will create a new service to use the internal IP address of the ingress controller. This will allow us to use the internal IP address of the ingress controller so that we can use it to connect with the Application Gateway. There is a file "nginx-internal.yml" which create a new internal Load Balancer in the ILBSUBNET. 
+We will create a new service to use the internal IP address of the ingress controller. This will allow us to use the internal IP address of the ingress controller so that we can use it to connect with the Application Gateway. There is a file "nginx-internal.yml" which create a new internal Load Balancer in the ILBSUBNET. Ensure to set the value of service.beta.kubernetes.io/azure-load-balancer-internal-subnet to your corresponding $PREFIX-ILBSubnet name.
 
 ```bash
 kubectl apply -f nginx-internal.yml
@@ -155,51 +147,9 @@ Error: creating Application Gateway: (Name "sg-appgateway" / Resource Group "jay
 This is an example of the command to create a new rule to allow traffic to the Application Gateway. 
 
 ```bash
-az network nsg rule create -g jayaksworkshop-rg --nsg-name jayaksworkshop-vnet-jayaksworkshop-appgwsubnet-nsg-southeastasia -n GatewayManager --priority 4096 --source-port-range '*' --access allow --destination-port-ranges 65200-65535 --source-address-prefixes GatewayManager --protocol Tcp
+az network nsg rule create -g $PREFIX-rg --nsg-name $PREFIX-vnet-jayaksworkshop-appgwsubnet-nsg-southeastasia -n GatewayManager --priority 4096 --source-port-range '*' --access allow --destination-port-ranges 65200-65535 --source-address-prefixes GatewayManager --protocol Tcp
 ```
 
-## GitOps Approach To Managing Clusters
-
-One of the most important aspects of managing a Kubernetes cluster is the ability to manage the configuration of the cluster. This includes the ability to manage the configuration of the cluster, the applications running on the cluster, and the ability to manage the configuration of the cluster itself. This is where GitOps comes in.
-
-> Why use a GitOps approach? Adopting GitOps in your CI/CD pipelines increases the security of your application and systems. With GitOps, a reconciliation operator is installed into the cluster itself that acts based on the configuration in a git repo that uses separate credentials. The operator reconciles the desired state as expressed in the manifest files, stored in the git repo, against the actual state of the cluster. This means that credentials and other secrets don’t ever leave the cluster. This also means that continuous integration operates independently, rather than on the cluster directly and that each pipeline component needs only a single read-write credential. Since cluster credentials never leave the cluster, your secrets are kept close. -WeaveWorks
-
-Pull Requests enabled on the config repo are independent of the cluster itself and can be reviewed by developers. This leaves a complete audit trail of every tag update and config change, regardless of whether it was made manually or automatically. Although using git as part of your CI/CD pipeline adds another layer of defense, it also means that the security onus is shifted to git itself.
-
-Flux was one of the first tools to enable the GitOps approach, and it’s the
-tool we will use due to its maturity and level of adoption. Below is a diagram that describes how the approach works.
-
-![GitOps Diagram](./img/gitops.png "GitOps Diagram")
-
-
-[Tutorial: Deploy applications using GitOps with Flux v2](https://learn.microsoft.com/en-us/azure/azure-arc/kubernetes/tutorial-use-gitops-flux2?tabs=azure-cli) has a great tutorial on how to use GitOps with Flux v2. And here is the simple guide to get you started.
-
-**CHALLENGE** - GitOps requres the F/W rule to allow the traffic to '$LOCATION.dp.kubernetesconfiguration.azure.com. Instructor will give you the guidance.
-
-```bash
-## Regsiter the following Azure resource providers
-az provider register --namespace Microsoft.Kubernetes
-az provider register --namespace Microsoft.ContainerService
-az provider register --namespace Microsoft.KubernetesConfiguration
-
-## Enable CLI Extension
-az extension add -n k8s-configuration
-az extension add -n k8s-extension
-
-## Create a Flux configuration - Change the values to match your environment
-
-az k8s-configuration flux create -g $PREFIX-rg -c $PREFIX-aks -n cluster-config --namespace default -t managedClusters --scope cluster -u https://github.com/{github_account}/sg-aks-workshop --branch master --kustomization name=infra path=./cluster-config prune=true --interval 1m
-```
-
-You'll notice once your flux configuration is provisioned, you'll have the following deployed:
-
-- **Namespaces** - Three namespaces will be created, `dev`, `staging`, and `production`. These namespaces will be used to deploy your applications to the cluster.
-
-- **Network Policy Rules** - The network policies will restrict communication between different teams' namespace, to limit the exposure of access between namespaces.
-
-- **LimitRanges** - LimitRanges will allow you to set resource consumption governance per namespaces to limit the amount of resources a team or user can deploy to a cluster.
-- 
-- **Quotas** - Quotas will allow you to set resource consumption governance on a namespace to limit the amount of resources a team or user can deploy to a cluster. It gives you a way to logically carve out resources of a single cluster.
 
 The below diagram shows our production cluster
 

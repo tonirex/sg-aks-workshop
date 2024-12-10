@@ -36,6 +36,9 @@ In this section we will set up the AKS specific policies we want to enforce.
 kubectl get crd | grep gatekeeper
 kubectl get constrainttemplate,config -n gatekeeper-system
 
+# Create production namespace
+kubectl create namespace production
+
 # Test out Allowed Registry Policy Against production Namespace
 kubectl run centosprod --image=centos -it --rm -n production
 

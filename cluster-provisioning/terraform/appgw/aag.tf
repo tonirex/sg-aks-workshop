@@ -10,7 +10,7 @@ locals {
 }
 
 resource "azurerm_application_gateway" "network" {
-  name                = "sg-appgateway"
+  name                = "aks-appgateway"
   resource_group_name = var.resource_group
   location            = var.location
 
