@@ -141,9 +141,6 @@ ContainerInventory
 
 ![Kusto state overview](./img/kusto-showing-state-running-vs-failed.png)
 
-## Next Steps
-
-[Validate Scenarios](validate-scenarios/README.md)
 
 ## Key Links
 

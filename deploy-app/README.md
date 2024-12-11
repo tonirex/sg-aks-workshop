@@ -55,6 +55,9 @@ There is an app.yaml file in this directory so either change into this directory
 **NOTE**: Before you apply the manifest file, make sure to update the `app.yml` file with the correct ACR name.
 
 ```bash
+# Create the dev namespace
+kubectl create namespace dev
+
 # Deploy the Postgres Database
 kubectl apply -f postgres.yml
 

@@ -119,14 +119,6 @@ resource "azurerm_monitor_diagnostic_setting" "azurerm-kubernetes-cluster" {
   log_analytics_workspace_id = azurerm_log_analytics_workspace.demo.id
   log_analytics_destination_type = "Dedicated"
 
-  enabled_log {
-    category = "kube-audit"
-  }
-
-  enabled_log {
-    category = "kube-audit-admin"
-  }
-
   metric {
     category = "AllMetrics"
     enabled  = true

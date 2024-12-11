@@ -9,7 +9,7 @@ For the purpose of this workshop, we will be using Azure Firewall to control egr
 The variables should be fairly straightforward, however a few notes have been included on those where additional information is necessary.
 
 ```bash
-export PREFIX="jayaksworkshop" # NOTE: Please make sure PREFIX is unique in your tenant, you must not have any hyphens '-' in the value.
+export PREFIX="bkrmpoc" # NOTE: Please make sure PREFIX is unique in your tenant, you must not have any hyphens '-' in the value.
 export RG="${PREFIX}-rg"
 export LOCATION="southeastasia"
 export ACR_NAME="${PREFIX}-acr"
@@ -17,11 +17,15 @@ export VNET_NAME="${PREFIX}-vnet"
 export AKSSUBNET_NAME="${PREFIX}-akssubnet"
 export ILBSUBNET_NAME="${PREFIX}-ilbsubnet"
 export APPGWSUBNET_NAME="${PREFIX}-appgwsubnet"
-# NOTE: DO NOT CHANGE FWSUBNET_NAME - This is currently a requirement for Azure Firewall.
+export SQLSUBNET_NAME="${PREFIX}-sqlsubnet"
+# NOTE: DO NOT CHANGE FWSUBNET_NAME and FWSUBNETMGMT_NAME - This is currently a requirement for Azure Firewall.
 export FWSUBNET_NAME="AzureFirewallSubnet"
+export FWSUBNETMGMT_NAME="AzureFirewallManagementSubnet"
 export FWNAME="${PREFIX}-fw"
 export FWPUBLICIP_NAME="${PREFIX}-fwpublicip"
+export FWPUBLICIPMGMT_NAME="${PREFIX}-fwmgmtpublicip"
 export FWIPCONFIG_NAME="${PREFIX}-fwconfig"
+export FWIPCONFIGMGMT_NAME="${PREFIX}-fwmgmtconfig"
 export FWROUTE_TABLE_NAME="${PREFIX}-fwrt"
 export FWROUTE_NAME="${PREFIX}-fwrn"
 export AGNAME="${PREFIX}-ag"
@@ -63,7 +67,9 @@ Here is a brief description of each of the dedicated subnets leveraging the vari
 - AKSSUBNET_NAME - This is where the AKS Cluster will get deployed.
 - ILBSUBNET_NAME - This is the subnet that will be used for **Kubernetes Services** that are exposed via an Internal Load Balancer (ILB). By taking this approach, we do not take away from the existing IP Address space in the AKS subnet that is used for Nodes and Pods.
 - APPGWSUBNET_NAME - This subnet is dedicated to Azure Application Gateway v2 which will serve as a Web Application Firewall (WAF).
+- SQLSUBNET_NAME - This the subnet which will be dedicated for Azure SQL Databases Vnet Integration
 - FWSUBNET_NAME - This subnet is dedicated to Azure Firewall. **NOTE: The name cannot be changed at this time.**
+- FWSUBNETMGMT_NAME - This subnet is dedicated to Azure Firewall Management interface for Basic Tiers. **NOTE: The name cannot be changed at this time.**
 
 ```bash
 # Create Virtual Network & Subnets for AKS, k8s Services, Firewall and Application Gateway
@@ -88,6 +94,16 @@ az network vnet subnet create \
     --vnet-name $VNET_NAME \
     --name $FWSUBNET_NAME \
     --address-prefix 100.64.4.0/26
+az network vnet subnet create \
+    --resource-group $RG \
+    --vnet-name $VNET_NAME \
+    --name $SQLSUBNET_NAME \
+    --address-prefix 100.64.5.0/24
+az network vnet subnet create \
+    --resource-group $RG \
+    --vnet-name $VNET_NAME \
+    --name $FWSUBNETMGMT_NAME \
+    --address-prefix 100.64.6.0/26
 ```
 
 ## AKS Creation Azure Firewall Pre-requisites
@@ -111,10 +127,18 @@ az extension add --name azure-firewall
 # Create Public IP for Azure Firewall
 az network public-ip create -g $RG -n $FWPUBLICIP_NAME -l $LOCATION --sku "Standard"
 
+# a second public ip is required for basic tier dedicated to the management interface
+az network public-ip create -g $RG -n $FWPUBLICIPMGMT_NAME -l $LOCATION --sku "Standard"
+
 # Create Azure Firewall
-az network firewall create -g $RG -n $FWNAME -l $LOCATION --enable-dns-proxy true
+az network firewall create -g $RG -n $FWNAME -l $LOCATION --enable-dns-proxy true --tier Basic
 
 # Configure Azure Firewall IP Config - This command will take several mins so be patient.
+
+# For basic SKU
+az network firewall ip-config create -f $FWNAME -g $RG --m-name $FWIPCONFIGMGMT_NAME --m-public-ip-address $FWPUBLICIPMGMT_NAME --m-vnet-name $VNET_NAME -n $FWIPCONFIG_NAME --public-ip-address $FWPUBLICIP_NAME --vnet-name $VNET_NAME
+
+# For standard and Premium SKU
 az network firewall ip-config create -g $RG -f $FWNAME -n $FWIPCONFIG_NAME --public-ip-address $FWPUBLICIP_NAME --vnet-name $VNET_NAME
 
 # Capture Azure Firewall IP Address for Later Use
@@ -126,7 +150,7 @@ echo $FWPUBLIC_IP
 echo $FWPRIVATE_IP
 # Create UDR & Routing Table for Azure Firewall
 az network route-table create -g $RG --name $FWROUTE_TABLE_NAME
-az network route-table route create -g $RG --name $FWROUTE_NAME --route-table-name $FWROUTE_TABLE_NAME --address-prefix 0.0.0.0/0 --next-hop-type VirtualAppliance --next-hop-ip-address $FWPRIVATE_IP --subscription $SUBSCRIPTION
+az network route-table route create -g $RG --name $FWROUTE_NAME --route-table-name $FWROUTE_TABLE_NAME --address-prefix 0.0.0.0/0 --next-hop-type VirtualAppliance --next-hop-ip-address $FWPRIVATE_IP --subscription $SUBID
 
 # Required AKS FW Rules
 # https://docs.microsoft.com/en-us/azure/aks/limit-egress-traffic#required-ports-and-addresses-for-aks-clusters
@@ -142,9 +166,9 @@ az network firewall network-rule create -g $RG -f $FWNAME --collection-name 'aks
 
 az network firewall network-rule create -g $RG -f $FWNAME --collection-name 'aksfwnr' -n 'docker' --protocols 'TCP' --source-addresses '*' --destination-fqdns docker.io registry-1.docker.io production.cloudflare.docker.com --destination-ports '443'
 
-az network firewall network-rule create -g $RG -f $FWNAME --collection-name 'aksfwnr' -n 'gitssh' --protocols 'TCP' --source-addresses '*' --destination-addresses '*' --destination-ports 22 --priority 300
+az network firewall network-rule create -g $RG -f $FWNAME --collection-name 'aksfwnr3' -n 'gitssh' --protocols 'TCP' --source-addresses '*' --destination-addresses '*' --destination-ports 22 --action allow --priority 300
 
-az network firewall network-rule create -g $RG -f $FWNAME --collection-name 'aksfwnr' -n 'fileshare' --protocols 'TCP' --source-addresses '*' --destination-addresses '*' --destination-ports 445 --priority 400 --action allow
+az network firewall network-rule create -g $RG -f $FWNAME --collection-name 'aksfwnr4' -n 'fileshare' --protocols 'TCP' --source-addresses '*' --destination-addresses '*' --destination-ports 445 --priority 400 --action allow
 
 # Add Application FW Rules
 az network firewall application-rule create -g $RG -f $FWNAME --collection-name 'aksfwar' -n 'fqdn' --source-addresses '*' --protocols 'http=80' 'https=443' --fqdn-tags "AzureKubernetesService" --priority 100 --action allow

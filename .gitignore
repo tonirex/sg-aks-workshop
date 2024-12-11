@@ -366,3 +366,9 @@ terraform.txt
 env.txt
 launch.json
 tasks.json
+cluster-provisioning/terraform/aks/.terraform.lock.hcl
+cluster-provisioning/terraform/aks/id_rsa
+cluster-provisioning/terraform/aks/id_rsa.pub
+cluster-provisioning/terraform/appgw/.terraform.lock.hcl
+cluster-provisioning/terraform/aks/.terraform.lock.hcl
+cluster-provisioning/terraform/appgw/.terraform.lock.hcl
